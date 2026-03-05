@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
-  Activity,
   Mail,
   Phone,
   MapPin,
@@ -18,9 +18,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center">
-                <Activity size={20} strokeWidth={3} />
-              </div>
+              <Image src="/logo.png" alt="Logo" width={30} height={30} />
               <span className="font-bold text-xl text-text-light tracking-tight">
                 FitLife.id
               </span>

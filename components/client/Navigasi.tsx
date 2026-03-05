@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { Activity, Menu, LogIn, Sun, Moon, X } from "lucide-react";
+import Image from "next/image";
+import { Menu, LogIn, Sun, Moon, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -23,9 +26,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
-              <Activity size={20} strokeWidth={3} />
-            </div>
+            <Image src="/logo.png" alt="Logo" width={35} height={35} />
             <span className="font-bold text-2xl tracking-tight text-text-light">
               FitLife<span className="text-primary">.id</span>
             </span>
@@ -34,34 +35,32 @@ export default function Navbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-8 items-center">
             <Link
-              href="#"
-              className="text-text-light hover:text-primary font-medium transition-colors"
+              href="/"
+              className={`text-text-light hover:text-primary font-medium transition-colors ${pathname === "/" ? "text-primary" : ""}`}
             >
               Home
             </Link>
             <Link
-              href="#"
-              className="text-text-muted hover:text-primary font-medium transition-colors"
+              href="/kalkulator-bmi"
+              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/kalkulator-bmi" ? "text-primary" : ""}`}
             >
               Kalkulator BMI
             </Link>
             <Link
-              href="#"
-              className="text-text-muted hover:text-primary font-medium transition-colors"
+              href="/menu-sehat"
+              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/menu-sehat" ? "text-primary" : ""}`}
             >
               Menu Sehat
             </Link>
             <Link
-              href="#"
-              className="text-text-muted hover:text-primary font-medium transition-colors"
+              href="/artikel"
+              className={`text-text-muted hover:text-primary font-medium transition-colors ${pathname === "/artikel" ? "text-primary" : ""}`}
             >
               Artikel
             </Link>
           </div>
 
-          {/* Right side: Theme Toggle + Login (Desktop) */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Dark/Light Toggle */}
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               className="p-2.5 rounded-full border border-card-border hover:border-primary text-text-muted hover:text-primary transition-all duration-300 hover:shadow-[0_0_12px_rgba(0,255,127,0.2)]"

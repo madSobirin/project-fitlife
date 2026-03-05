@@ -39,7 +39,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4 justify-start">
                 <Link
                   href="#"
-                  className="bg-primary text-background-dark hover:bg-primary-hover px-8 py-3.5 rounded-full font-bold shadow-[0_0_20px_rgba(0,255,127,0.4)] transition transform hover:-translate-y-1 text-center flex items-center justify-center gap-2"
+                  className="bg-primary text-slate-800 hover:bg-primary-hover px-8 py-3.5 rounded-full font-bold shadow-[0_0_20px_rgba(0,255,127,0.4)] transition transform hover:-translate-y-1 text-center flex items-center justify-center gap-2"
                 >
                   Mulai Sekarang
                   <ArrowRight size={18} />
@@ -59,7 +59,7 @@ export default function Home() {
                 <Image
                   alt="Healthy Lifestyle"
                   className="object-cover w-full h-[400px] lg:h-[500px] transform transition duration-500 group-hover:scale-105"
-                  src="/logo.png"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ4ZkSFClO1fXtFbM0XmO9HaCa_r9xNW8tboOEpzU7LBjEFr5MPX4c86KmN2zBDe6d_YoFLQVSQ8A05NFXJEdmxFjW4rakGfhZleToMRiI8UAtyHgiXcg4cLOpsjuifCjLKlfYK-f4nZ5SdfmAy-FXZ0pOfr1n2CUBYI3h5myPjfEaNdOSnDRu-HUcTPQX59IVEidQcadhat-aKa25U7WoftnrqckvkVyf84ERzpSltf24cU-EJFf78t3LWPE77S3ylwfSmnh3JNY"
                   width={800}
                   height={600}
                   priority
@@ -98,7 +98,7 @@ export default function Home() {
               </p>
               <Link
                 href="#"
-                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-background-dark py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
+                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
                 <ChevronRight
@@ -122,7 +122,7 @@ export default function Home() {
               </p>
               <Link
                 href="#"
-                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-background-dark py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
+                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
                 <ChevronRight
@@ -146,7 +146,7 @@ export default function Home() {
               </p>
               <Link
                 href="#"
-                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-background-dark py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
+                className="w-full bg-transparent border border-primary text-primary hover:bg-primary hover:text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 group/btn"
               >
                 Lihat Detail
                 <ChevronRight
@@ -224,7 +224,7 @@ export default function Home() {
           </p>
           <Link
             href="#"
-            className="inline-flex items-center gap-3 bg-primary text-background-dark hover:bg-primary-hover px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_25px_rgba(0,255,127,0.5)] transition transform hover:scale-105"
+            className="inline-flex items-center gap-3 bg-primary text-slate-800 hover:bg-primary-hover px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_25px_rgba(0,255,127,0.5)] transition transform hover:scale-105"
           >
             <Scale size={22} />
             Hitung BMI Sekarang
