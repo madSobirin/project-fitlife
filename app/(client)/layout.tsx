@@ -1,10 +1,15 @@
-import NavClient from "@/components/client/Navigasi";
+// import NavClient from "@/components/client/Navigasi";
+import Navbar from "@/components/client/Navigasi";
+import Footer from "@/components/client/Footer";
+import ChatButton from "@/components/ChatButton";
 
 const LayoutClient = ({ children }: { children: React.ReactNode }) => {
   return (
     <div>
-      <NavClient />
-      {children}
+      <Navbar />
+      <main>{children}</main>
+      <Footer />
+      <ChatButton />
     </div>
   );
 };

@@ -1,69 +1,154 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Menu } from "lucide-react";
-import Image from "next/image";
+import { Activity, Menu, LogIn, Sun, Moon, X } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
-const NavClient = () => {
+export default function Navbar() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
-    <div className="flex items-center justify-center">
-      <nav className="w-[90%] md:w-[70%] mt-5 bg-[#18382b] text-gray-300 rounded-2xl">
-        <div className="w-full md:w-[80%] mx-auto flex items-center justify-between px-6 py-4 md:px-2 md:py-4">
-          {/* LEFT - Logo */}
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo.png"
-              width={30}
-              height={30}
-              alt="Logo Perusahaan"
-            />
-            <span className="text-lg font-semibold text-green-400">
-              FitLife.id
+    <nav className="sticky top-0 z-50 bg-background-base/90 backdrop-blur-md border-b border-card-border transition-colors duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="bg-primary text-background-dark p-1.5 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
+              <Activity size={20} strokeWidth={3} />
+            </div>
+            <span className="font-bold text-2xl tracking-tight text-text-light">
+              FitLife<span className="text-primary">.id</span>
             </span>
-          </div>
+          </Link>
 
-          {/* CENTER - Menu */}
-          <div className="hidden md:flex items-center gap-8 md:text-md font-medium">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex space-x-8 items-center">
             <Link
-              href="/"
-              className="relative text-green-400 after:absolute after:-bottom-2 after:left-0 after:w-full after:h-[2px] after:bg-green-400"
+              href="#"
+              className="text-text-light hover:text-primary font-medium transition-colors"
             >
               Home
             </Link>
-
-            <Link href="/bmi" className="hover:text-green-400 transition">
+            <Link
+              href="#"
+              className="text-text-muted hover:text-primary font-medium transition-colors"
+            >
               Kalkulator BMI
             </Link>
-
             <Link
-              href="/menu-sehat"
-              className="hover:text-green-400 transition"
+              href="#"
+              className="text-text-muted hover:text-primary font-medium transition-colors"
             >
               Menu Sehat
             </Link>
-
-            <Link href="/artikel" className="hover:text-green-400 transition">
+            <Link
+              href="#"
+              className="text-text-muted hover:text-primary font-medium transition-colors"
+            >
               Artikel
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="w-12 h-12 items-center justify-center rounded-full hover:bg-green-700 transition flex">
-              <Sun size={22} className="text-yellow-400" />
+          {/* Right side: Theme Toggle + Login (Desktop) */}
+          <div className="hidden md:flex items-center gap-3">
+            {/* Dark/Light Toggle */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2.5 rounded-full border border-card-border hover:border-primary text-text-muted hover:text-primary transition-all duration-300 hover:shadow-[0_0_12px_rgba(0,255,127,0.2)]"
+              aria-label="Toggle theme"
+            >
+              {mounted && theme === "dark" ? (
+                <Sun size={18} />
+              ) : (
+                <Moon size={18} />
+              )}
             </button>
 
-            <button className="hidden md:flex bg-green-500 hover:bg-green-400 text-black font-semibold px-6 py-2 rounded-full transition">
-              Login
-            </button>
+            {/* Login Button with icon on the side */}
+            <Link
+              href="#"
+              className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(0,255,127,0.3)] transition transform hover:-translate-y-0.5 flex items-center gap-2"
+            >
+              <LogIn size={18} />
+              <span>Login</span>
+            </Link>
+          </div>
 
-            <button className="md:hidden w-12 h-12 flex items-center justify-center rounded-full hover:bg-green-700 transition">
-              <Menu size={22} className="text-white" />
+          {/* Mobile: Theme Toggle + Menu Button */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="p-2 rounded-full border border-card-border text-text-muted hover:text-primary transition-colors"
+              aria-label="Toggle theme"
+            >
+              {mounted && theme === "dark" ? (
+                <Sun size={18} />
+              ) : (
+                <Moon size={18} />
+              )}
+            </button>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="text-text-light hover:text-primary focus:outline-none transition-colors"
+              aria-label="Toggle Menu"
+            >
+              {mobileOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>
-      </nav>
-    </div>
-  );
-};
 
-export default NavClient;
+        {/* Mobile Menu Dropdown */}
+        {mobileOpen && (
+          <div className="md:hidden pb-6 border-t border-card-border pt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <Link
+              href="#"
+              className="block text-text-light hover:text-primary font-medium transition-colors py-2"
+              onClick={() => setMobileOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              href="#"
+              className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
+              onClick={() => setMobileOpen(false)}
+            >
+              Kalkulator BMI
+            </Link>
+            <Link
+              href="#"
+              className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
+              onClick={() => setMobileOpen(false)}
+            >
+              Menu Sehat
+            </Link>
+            <Link
+              href="#"
+              className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
+              onClick={() => setMobileOpen(false)}
+            >
+              Artikel
+            </Link>
+            <Link
+              href="#"
+              className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold transition flex items-center gap-2 w-fit mt-2"
+              onClick={() => setMobileOpen(false)}
+            >
+              <LogIn size={18} />
+              <span>Login</span>
+            </Link>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
