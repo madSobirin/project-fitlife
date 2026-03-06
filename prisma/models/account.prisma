@@ -1,7 +1,7 @@
 model Account {
   id           Int    @id @default(autoincrement())
 
-  nama_lengkap String?
+  name String?
   username     String?  @unique
   email        String  @unique
 

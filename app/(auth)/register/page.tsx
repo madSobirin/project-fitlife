@@ -1,73 +1,99 @@
+"use client";
+
+import { useState } from "react";
+import { register } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
-function RegisterPage() {
+export default function RegisterPage() {
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setIsLoading(true);
+    setErrors({});
+    const result = await register(formData);
+    if (result?.error) {
+      setErrors(result.error);
+      setIsLoading(false);
+    }
+  }
+
   return (
-    <div className="flex min-h-screen justify-center items-center">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen justify-center items-center bg-background-base p-4">
+      <Card className="w-full max-w-sm border-card-border bg-card-dark text-text-light">
         <CardHeader>
-          <CardTitle>Register to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to register to your account
-          </CardDescription>
-          <CardAction>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl">Daftar Akun</CardTitle>
             <Link href="/login">
-              <Button variant="outline">Sign In</Button>
+              <Button variant="link" className="text-primary p-0">
+                Sign In
+              </Button>
             </Link>
-          </CardAction>
+          </div>
+          <CardDescription className="text-text-muted">
+            Mulai perjalanan sehatmu bersama FitLife.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input id="name" type="text" placeholder="John Doe" required />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input id="password" type="password" required />
-              </div>
+          <form action={handleSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Nama Lengkap</Label>
+              <Input
+                name="name"
+                id="name"
+                placeholder="John Doe"
+                className="bg-background-dark border-card-border"
+              />
+              {errors.name && (
+                <p className="text-xs text-red-500">{errors.name[0]}</p>
+              )}
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                name="email"
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                className="bg-background-dark border-card-border"
+              />
+              {errors.email && (
+                <p className="text-xs text-red-500">{errors.email[0]}</p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                name="password"
+                id="password"
+                type="password"
+                className="bg-background-dark border-card-border"
+              />
+              {errors.password && (
+                <p className="text-xs text-red-500">{errors.password[0]}</p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-primary text-background-dark hover:bg-primary-hover font-bold"
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader2 className="animate-spin" /> : "Buat Akun"}
+            </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button type="submit" className="w-full cursor-pointer">
-            Register
-          </Button>
-          <Button variant="outline" className="w-full cursor-pointer">
-            Register with Google
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
 }
-export default RegisterPage;
