@@ -58,7 +58,7 @@ export default function Home() {
               <div className="relative rounded-3xl overflow-hidden border border-card-border shadow-2xl">
                 <Image
                   alt="Healthy Lifestyle"
-                  className="object-cover w-full h-[400px] lg:h-[500px] transform transition duration-500 group-hover:scale-105"
+                  className="object-cover w-full h-100 lg:h-125 transform transition duration-500 group-hover:scale-105"
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ4ZkSFClO1fXtFbM0XmO9HaCa_r9xNW8tboOEpzU7LBjEFr5MPX4c86KmN2zBDe6d_YoFLQVSQ8A05NFXJEdmxFjW4rakGfhZleToMRiI8UAtyHgiXcg4cLOpsjuifCjLKlfYK-f4nZ5SdfmAy-FXZ0pOfr1n2CUBYI3h5myPjfEaNdOSnDRu-HUcTPQX59IVEidQcadhat-aKa25U7WoftnrqckvkVyf84ERzpSltf24cU-EJFf78t3LWPE77S3ylwfSmnh3JNY"
                   width={800}
                   height={600}

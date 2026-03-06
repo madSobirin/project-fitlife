@@ -3,6 +3,7 @@ import { z } from "zod";
 export const SignupFormSchema = z.object({
   name: z.string().min(2, { message: "Nama minimal 2 karakter." }).trim(),
   email: z.string().email({ message: "Email tidak valid." }).trim(),
+
   password: z
     .string()
     .min(8, { message: "Password minimal 8 karakter." })

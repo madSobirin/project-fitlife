@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { register } from "@/app/actions/auth";
+import { register } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
