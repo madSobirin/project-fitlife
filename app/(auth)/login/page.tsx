@@ -1,120 +1,165 @@
 "use client";
-import { Button } from "@/components/ui/button";
-import { login } from "@/actions/auth";
+
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
-
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { login } from "@/actions/auth";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Loader2, Eye } from "lucide-react";
+import Image from "next/image";
+import { motion, Variants } from "framer-motion";
+import AuthLayout from "@/components/auth/authLayout";
+import SubmitButton from "@/components/auth/ui/button";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+const container: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+    },
+  },
+};
 
-  return (
-    <Button
-      type="submit"
-      className="w-full cursor-pointer mt-5"
-      disabled={pending}
-    >
-      {pending ? (
-        <>
-          <Loader2 className="mr-2 h-5 w-5 animate-spin text-yellow-400" />
-          Please wait
-        </>
-      ) : (
-        "Login"
-      )}
-    </Button>
-  );
-}
+const item: Variants = {
+  hidden: { opacity: 0, y: 25 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+};
 
-function LoginPage() {
+// function SubmitButton() {
+//   const { pending } = useFormStatus();
+
+//   return (
+//     <Button
+//       type="submit"
+//       disabled={pending}
+//       className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-[26px] font-semibold text-white hover:bg-emerald-600 active:scale-[0.97] transition shadow-sm"
+//     >
+//       {pending ? (
+//         <Loader2 className="animate-spin h-5 w-5" />
+//       ) : (
+//         <>Continue account →</>
+//       )}
+//     </Button>
+//   );
+// }
+
+export default function LoginPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
+
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(data: FormData) {
     setErrors({});
-    try {
-      const result = await login(formData);
-      if (result?.error) {
-        setErrors(result.error);
-      }
-    } catch (error) {
-      console.error(error);
+    const result = await login(data);
+
+    if (result?.error) {
+      setErrors(result.error);
     }
   }
 
   return (
-    <div className="flex min-h-screen justify-center items-center">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your email below to login to your account
-          </CardDescription>
-          <CardAction>
-            <Link href="/register">
-              <Button variant="outline">Sign Up</Button>
-            </Link>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <form action={handleSubmit}>
-            <div className="flex flex-col gap-6">
-              {errors.form && (
-                <div className="p-3 text-sm font-medium text-red-500 bg-red-50 border border-red-200 rounded-md">
-                  {errors.form[0]}
-                </div>
-              )}
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-                {errors.email && (
-                  <p className="text-xs text-red-500">{errors.email[0]}</p>
-                )}
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
-                <Input id="password" type="password" name="password" required />
-                {errors.password && (
-                  <p className="text-xs text-red-500">{errors.password[0]}</p>
-                )}
-              </div>
-            </div>
-            <SubmitButton />
-          </form>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button variant="outline" className="w-full cursor-pointer">
-            Login with Google
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    <AuthLayout
+      title="Welcome Back"
+      titleText="Enter your credentials to access your dashboard."
+      linkTitle="belum punya akun"
+      linkText="Register"
+      href="/register"
+    >
+      <motion.form
+        action={handleSubmit}
+        variants={container}
+        className="space-y-6"
+      >
+        {errors.form && (
+          <p className="text-sm text-red-500 text-center">{errors.form[0]}</p>
+        )}
+
+        {/* email */}
+        <motion.div variants={item} className="space-y-2">
+          <Label
+            htmlFor="email"
+            className="text-sm font-medium text-neutral-700"
+          >
+            Email Address
+          </Label>
+
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="name@example.com"
+            className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+
+          {errors.email && (
+            <p className="text-xs text-red-500">{errors.email[0]}</p>
+          )}
+        </motion.div>
+
+        {/* password */}
+        <motion.div variants={item} className="space-y-2">
+          <Label
+            htmlFor="password"
+            className="text-sm font-medium text-neutral-700"
+          >
+            Password
+          </Label>
+
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Create a secure password"
+              className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm pr-10 focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
+            />
+
+            <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer" />
+          </div>
+
+          {errors.password && (
+            <p className="text-xs text-red-500">{errors.password[0]}</p>
+          )}
+        </motion.div>
+
+        {/* submit */}
+        <motion.div variants={item}>
+          <SubmitButton titleButton="Continue account" />
+        </motion.div>
+
+        {/* divider */}
+        <motion.div variants={item} className="flex items-center gap-4 py-4">
+          <div className="h-px bg-neutral-200 flex-1" />
+          <span className="text-sm text-neutral-400">or join with</span>
+          <div className="h-px bg-neutral-200 flex-1" />
+        </motion.div>
+
+        {/* google button */}
+        <motion.button
+          variants={item}
+          type="button"
+          className="w-full flex items-center justify-center gap-3 border border-neutral-200 bg-white rounded-xl py-3 hover:bg-gray-100 active:scale-[0.98] transition text-neutral-800 font-medium"
+        >
+          <Image src="/search.png" alt="google" width={20} height={20} />
+          Continue with Google
+        </motion.button>
+      </motion.form>
+    </AuthLayout>
   );
 }
-export default LoginPage;
