@@ -3,30 +3,27 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { register } from "@/actions/auth";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye } from "lucide-react";
+import Image from "next/image";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button
+    <button
       type="submit"
-      className="w-full bg-primary text-background-dark hover:bg-primary-hover font-bold"
       disabled={pending}
+      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-3.5 font-semibold text-white hover:bg-emerald-600 transition shadow-sm"
     >
-      {pending ? <Loader2 className="animate-spin" /> : "Buat Akun"}
-    </Button>
+      {pending ? (
+        <Loader2 className="animate-spin h-5 w-5" />
+      ) : (
+        <>Create Account →</>
+      )}
+    </button>
   );
 }
 
@@ -47,72 +44,128 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen justify-center items-center bg-background-base p-4">
-      <Card className="w-full max-w-sm border-card-border bg-card-dark text-text-light">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl">Daftar Akun</CardTitle>
-            <Link href="/login">
-              <Button variant="link" className="text-primary p-0">
-                Sign In
-              </Button>
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f7f6] px-6">
+      <div className="w-full max-w-md ">
+        {/* top link */}
+        <div className="flex justify-end text-sm mb-14">
+          <span className="text-neutral-500">
+            Belum punya akun?{" "}
+            <Link
+              href="/login"
+              className="text-emerald-500 font-semibold hover:underline"
+            >
+              Sign In
             </Link>
+          </span>
+        </div>
+
+        {/* heading */}
+        <div className="mb-10">
+          <h1 className="text-[36px] leading-tight font-bold text-neutral-900">
+            Start Your Journey
+          </h1>
+          <p className="text-neutral-500 mt-2 text-[15px]">
+            Create your account to access elite tracking and coaching.
+          </p>
+        </div>
+
+        <form action={handleSubmit} className="space-y-6">
+          {/* name */}
+          <div className="space-y-2">
+            <Label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="name"
+            >
+              Full Name
+            </Label>
+
+            <Input
+              name="name"
+              id="name"
+              placeholder="Enter your full name"
+              className="placeholder:text-neutral-600 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm focus-visible:ring-emerald-500 text-neutral-700"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+            />
+
+            {errors.name && (
+              <p className="text-xs text-red-500">{errors.name[0]}</p>
+            )}
           </div>
-          <CardDescription className="text-text-muted">
-            Mulai perjalanan sehatmu bersama FitLife.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={handleSubmit} className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Nama Lengkap</Label>
-              <Input
-                name="name"
-                id="name"
-                placeholder="John Doe"
-                className="bg-background-dark border-card-border"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-              {errors.name && (
-                <p className="text-xs text-red-500">{errors.name[0]}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                name="email"
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                className="bg-background-dark border-card-border"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-              />
-              {errors.email && (
-                <p className="text-xs text-red-500">{errors.email[0]}</p>
-              )}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+
+          {/* email */}
+          <div className="space-y-2">
+            <Label
+              htmlFor="email"
+              className="text-sm font-medium text-neutral-700"
+            >
+              Email Address
+            </Label>
+
+            <Input
+              name="email"
+              type="email"
+              id="email"
+              placeholder="name@example.com"
+              className="placeholder:text-neutral-600  h-12 rounded-xl border border-neutral-200 bg-white shadow-sm focus-visible:ring-emerald-500"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+
+            {errors.email && (
+              <p className="text-xs text-red-500">{errors.email[0]}</p>
+            )}
+          </div>
+
+          {/* password */}
+          <div className="space-y-2">
+            <Label
+              className="text-sm font-medium text-neutral-700"
+              htmlFor="password"
+            >
+              Password
+            </Label>
+
+            <div className="relative">
               <Input
                 name="password"
-                id="password"
                 type="password"
-                className="bg-background-dark border-card-border"
+                id="password"
+                placeholder="Create a secure password"
+                className="placeholder:text-neutral-600  h-12 rounded-xl border border-neutral-200 bg-white shadow-sm pr-10 focus-visible:ring-emerald-500"
               />
-              {errors.password && (
-                <p className="text-xs text-red-500">{errors.password[0]}</p>
-              )}
+
+              <Eye className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 cursor-pointer" />
             </div>
-            <SubmitButton />
-          </form>
-        </CardContent>
-      </Card>
+
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password[0]}</p>
+            )}
+          </div>
+
+          <SubmitButton />
+
+          {/* divider */}
+          <div className="flex items-center gap-4 py-4">
+            <div className="h-px bg-neutral-200 flex-1" />
+            <span className="text-sm text-neutral-400">or join with</span>
+            <div className="h-px bg-neutral-200 flex-1" />
+          </div>
+
+          {/* google button */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 border border-neutral-200 bg-white rounded-xl py-3 hover:bg-gray-100 transition text-neutral-800 font-medium"
+          >
+            <Image src="/search.png" alt="google" width={20} height={20} />
+            Continue with Google
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
