@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { register } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,17 +16,33 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
-export default function RegisterPage() {
-  const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [isLoading, setIsLoading] = useState(false);
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
-  async function handleSubmit(formData: FormData) {
-    setIsLoading(true);
+  return (
+    <Button
+      type="submit"
+      className="w-full bg-primary text-background-dark hover:bg-primary-hover font-bold"
+      disabled={pending}
+    >
+      {pending ? <Loader2 className="animate-spin" /> : "Buat Akun"}
+    </Button>
+  );
+}
+
+export default function RegisterPage() {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+  });
+
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+
+  async function handleSubmit(data: FormData) {
     setErrors({});
-    const result = await register(formData);
+    const result = await register(data);
     if (result?.error) {
       setErrors(result.error);
-      setIsLoading(false);
     }
   }
 
@@ -54,6 +71,10 @@ export default function RegisterPage() {
                 id="name"
                 placeholder="John Doe"
                 className="bg-background-dark border-card-border"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
               {errors.name && (
                 <p className="text-xs text-red-500">{errors.name[0]}</p>
@@ -67,6 +88,10 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="m@example.com"
                 className="bg-background-dark border-card-border"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
               />
               {errors.email && (
                 <p className="text-xs text-red-500">{errors.email[0]}</p>
@@ -84,13 +109,7 @@ export default function RegisterPage() {
                 <p className="text-xs text-red-500">{errors.password[0]}</p>
               )}
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-primary text-background-dark hover:bg-primary-hover font-bold"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="animate-spin" /> : "Buat Akun"}
-            </Button>
+            <SubmitButton />
           </form>
         </CardContent>
       </Card>

@@ -43,12 +43,12 @@ export async function login(formData: FormData) {
 
   // Cari user
   const user = await prisma.account.findUnique({ where: { email } });
-  if (!user) return { error: { form: "Email atau password salah." } };
+  if (!user) return { error: { form: ["Email atau password salah."] } };
 
   // Cek password
   const passwordMatch = await bcrypt.compare(password, user.password);
-  if (!passwordMatch) return { error: { form: "Email atau password salah." } };
-
+  if (!passwordMatch)
+    return { error: { form: ["Email atau password salah."] } };
   // Di sini nanti anda setup Session (NextAuth), untuk sekarang kita redirect
   redirect("/dashboard");
 }
