@@ -1,8 +1,11 @@
-export default function BerandaAdminPage() {
+import LayoutAdmin from "@/components/admin/LayoutAdmin";
+const BerandaPage = () => {
   return (
-    <div>
+    <LayoutAdmin>
       <h1>Halaman Beranda Admin</h1>
       <p>Sedang dalam pengembangan...</p>
-    </div>
+    </LayoutAdmin>
   );
-}
+};
+
+export default BerandaPage;
