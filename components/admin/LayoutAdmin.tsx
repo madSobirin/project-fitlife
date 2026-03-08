@@ -1,19 +1,25 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "./sidebar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "./navbar";
-import { AnimatePresence } from "framer-motion";
 
 const LayoutAdmin = ({ children }: { children: React.ReactNode }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      <Sidebar />
+    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-background-base transition-colors duration-300">
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      <div className="flex-1 ml-64 flex flex-col">
-        <Navbar />
+      {/* Main Content Area */}
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          isSidebarOpen ? "ml-64" : "ml-0"
+        } lg:ml-64`}
+      >
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
 
-        <main className="p-8">
+        <main className="p-4 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -26,6 +32,14 @@ const LayoutAdmin = ({ children }: { children: React.ReactNode }) => {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

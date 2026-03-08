@@ -65,12 +65,12 @@ const itemVariants = {
 export default function BerandaPage() {
   return (
     <LayoutAdmin>
-      <div className="space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+      <div className="space-y-6 md:space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-text-light tracking-tight">
             Dashboard Admin
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-text-muted">
             Update terakhir:{" "}
             {new Date().toLocaleString("id-ID", {
               dateStyle: "medium",
@@ -84,55 +84,76 @@ export default function BerandaPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-1 md:grid-cols-4 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
         >
           {stats.map((stat, i) => (
             <motion.div
               key={i}
               variants={itemVariants}
               whileHover={{ scale: 1.02 }}
-              className="bg-white p-6 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-1"
+              className="bg-white dark:bg-card-dark p-5 md:p-6 rounded-xl border border-slate-100 dark:border-card-border shadow-sm flex flex-col gap-1 transition-colors duration-300"
             >
-              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-              <p className="text-3xl font-bold text-emerald-600">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium text-slate-500 dark:text-text-muted">
+                  {stat.label}
+                </p>
+                <stat.icon className="h-4 w-4 text-emerald-500/70" />
+              </div>
+              <p className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
                 {stat.value}
               </p>
             </motion.div>
           ))}
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 md:gap-8">
           {/* MENU TERBARU TABLE */}
           <motion.div
             variants={itemVariants}
             initial="hidden"
             animate="visible"
-            className="lg:col-span-5 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden"
+            className="xl:col-span-5 bg-white dark:bg-card-dark rounded-xl border border-slate-100 dark:border-card-border shadow-sm overflow-hidden transition-colors duration-300"
           >
-            <div className="p-5 border-b border-slate-50">
-              <h2 className="font-bold text-slate-800">Menu Terbaru</h2>
+            <div className="p-4 md:p-5 border-b border-slate-50 dark:border-card-border">
+              <h2 className="font-bold text-slate-800 dark:text-text-light">
+                Menu Terbaru
+              </h2>
             </div>
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 font-semibold">
-                <tr>
-                  <th className="px-5 py-3 border-b">No</th>
-                  <th className="px-5 py-3 border-b">Nama Menu</th>
-                  <th className="px-5 py-3 border-b">Dilihat</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {menuTerbaru.map((item) => (
-                  <tr
-                    key={item.no}
-                    className="hover:bg-slate-50/50 transition-colors"
-                  >
-                    <td className="px-5 py-4">{item.no}</td>
-                    <td className="px-5 py-4 font-medium">{item.nama}</td>
-                    <td className="px-5 py-4 text-slate-500">{item.dilihat}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 dark:bg-background-dark text-slate-600 dark:text-text-muted font-semibold transition-colors">
+                  <tr>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      No
+                    </th>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      Nama Menu
+                    </th>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      Dilihat
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-50 dark:divide-card-border">
+                  {menuTerbaru.map((item) => (
+                    <tr
+                      key={item.no}
+                      className="hover:bg-slate-50/50 dark:hover:bg-background-base/50 transition-colors"
+                    >
+                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400">
+                        {item.no}
+                      </td>
+                      <td className="px-5 py-4 font-medium text-slate-700 dark:text-text-light">
+                        {item.nama}
+                      </td>
+                      <td className="px-5 py-4 text-slate-500 dark:text-text-muted">
+                        {item.dilihat}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </motion.div>
 
           {/* PENGGUNA TERBARU TABLE */}
@@ -140,43 +161,59 @@ export default function BerandaPage() {
             variants={itemVariants}
             initial="hidden"
             animate="visible"
-            className="lg:col-span-7 bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden"
+            className="xl:col-span-7 bg-white dark:bg-card-dark rounded-xl border border-slate-100 dark:border-card-border shadow-sm overflow-hidden transition-colors duration-300"
           >
-            <div className="p-5 border-b border-slate-50 flex justify-between items-center">
-              <h2 className="font-bold text-slate-800">Pengguna Terbaru</h2>
+            <div className="p-4 md:p-5 border-b border-slate-50 dark:border-card-border flex justify-between items-center">
+              <h2 className="font-bold text-slate-800 dark:text-text-light">
+                Pengguna Terbaru
+              </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600 font-semibold">
+              <table className="w-full text-left text-sm whitespace-nowrap">
+                <thead className="bg-slate-50 dark:bg-background-dark text-slate-600 dark:text-text-muted font-semibold transition-colors">
                   <tr>
-                    <th className="px-5 py-3 border-b">No</th>
-                    <th className="px-5 py-3 border-b">Nama</th>
-                    <th className="px-5 py-3 border-b">Email</th>
-                    <th className="px-5 py-3 border-b text-center">Status</th>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      No
+                    </th>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      Nama
+                    </th>
+                    <th className="px-5 py-3 border-b dark:border-card-border">
+                      Email
+                    </th>
+                    <th className="px-5 py-3 border-b dark:border-card-border text-center">
+                      Status
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-slate-50 dark:divide-card-border">
                   {penggunaTerbaru.map((user) => (
                     <tr
                       key={user.no}
-                      className="hover:bg-slate-50/50 transition-colors"
+                      className="hover:bg-slate-50/50 dark:hover:bg-background-base/50 transition-colors"
                     >
-                      <td className="px-5 py-4">{user.no}</td>
-                      <td className="px-5 py-4 font-medium">{user.nama}</td>
-                      <td className="px-5 py-4 text-slate-500">{user.email}</td>
+                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400">
+                        {user.no}
+                      </td>
+                      <td className="px-5 py-4 font-medium text-slate-700 dark:text-text-light">
+                        {user.nama}
+                      </td>
+                      <td className="px-5 py-4 text-slate-500 dark:text-text-muted">
+                        {user.email}
+                      </td>
                       <td className="px-5 py-4 text-center">
                         <div className="flex flex-col items-center gap-1">
                           <span
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold text-white shadow-sm ${
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold text-white shadow-sm transition-colors ${
                               user.status === "Aktif"
-                                ? "bg-emerald-500"
-                                : "bg-slate-500"
+                                ? "bg-emerald-500 dark:bg-emerald-600"
+                                : "bg-slate-500 dark:bg-slate-600"
                             }`}
                           >
                             {user.status}
                           </span>
                           {user.tgl && (
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">
                               {user.tgl}
                             </span>
                           )}
@@ -187,8 +224,8 @@ export default function BerandaPage() {
                 </tbody>
               </table>
             </div>
-            <div className="p-4 border-t border-slate-50 flex justify-end">
-              <button className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors px-4 py-2 border border-indigo-100 rounded-lg hover:bg-indigo-50">
+            <div className="p-4 border-t border-slate-50 dark:border-card-border flex justify-center sm:justify-end">
+              <button className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors px-4 py-2 border border-emerald-100 dark:border-emerald-900/50 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 w-full sm:w-auto">
                 Lihat semua pengguna
               </button>
             </div>
