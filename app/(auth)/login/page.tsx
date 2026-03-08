@@ -9,9 +9,8 @@ import Image from "next/image";
 import { motion, Variants } from "framer-motion";
 import AuthLayout from "@/components/auth/authLayout";
 import SubmitButton from "@/components/auth/ui/button";
-import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-// import router from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 const container: Variants = {
   hidden: { opacity: 0 },
@@ -35,13 +34,11 @@ const item: Variants = {
   },
 };
 
-export default function LoginPage() {
+export default function LoginClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const registered = searchParams.get("registered");
 
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
   });
 
@@ -57,24 +54,17 @@ export default function LoginPage() {
   }
 
   useEffect(() => {
-    if (registered) {
+    if (registered === "1") {
       toast.success("Akun berhasil dibuat, silakan login.", {
         id: "register-success",
-        style: {
-          background: "white",
-          color: "black",
-        },
       });
     }
-  }, [registered, router]);
+  }, [registered]);
 
   useEffect(() => {
-    if (errors.form) {
+    if (errors?.form) {
       toast.error(errors.form[0], {
         id: "login-error",
-        style: {
-          color: "red",
-        },
       });
     }
   }, [errors]);
@@ -132,7 +122,7 @@ export default function LoginPage() {
               id="password"
               name="password"
               type="password"
-              placeholder="Create a secure password"
+              placeholder="Enter your password"
               className="placeholder:text-neutral-500 h-12 rounded-xl border border-neutral-200 bg-white shadow-sm pr-10 focus-visible:ring-2 focus-visible:ring-emerald-500 text-neutral-700"
             />
 
