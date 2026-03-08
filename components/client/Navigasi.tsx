@@ -75,7 +75,7 @@ export default function Navbar() {
 
             {/* Login Button with icon on the side */}
             <Link
-              href="#"
+              href="/login"
               className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(0,255,127,0.3)] transition transform hover:-translate-y-0.5 flex items-center gap-2"
             >
               <LogIn size={18} />
