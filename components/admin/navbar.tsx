@@ -57,11 +57,6 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
           {mounted && theme === "dark" ? <Sun size={22} /> : <Moon size={22} />}
         </button>
 
-        <button className="relative p-2 text-slate-500 dark:text-text-muted hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
-          <Bell size={22} />
-          <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 border-2 border-white dark:border-card-dark rounded-full"></span>
-        </button>
-
         {/* Divider Vertical */}
         <div className="h-8 w-px bg-slate-200 dark:bg-card-border" />
 
