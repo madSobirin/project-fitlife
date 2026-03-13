@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import LayoutAdmin from "@/components/admin/LayoutAdmin";
 import Image from "next/image";
+import Link from "next/link";
 
 interface MenuSehat {
   id: string;
@@ -68,10 +69,13 @@ export default function MenuPage() {
               Kelola menu makanan harian Anda
             </p>
           </div>
-          <button className="w-fit bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-green-500/20">
+          <Link
+            href="/menu/create"
+            className="w-fit bg-[#22c55e] hover:bg-[#16a34a] text-white px-6 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-green-500/20"
+          >
             <Plus className="w-5 h-5" />
             Tambah Menu
-          </button>
+          </Link>
         </div>
 
         {/* Search & Filters Container */}
