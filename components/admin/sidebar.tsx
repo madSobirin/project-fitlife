@@ -25,7 +25,7 @@ const sidebarItems: SidebarItem[] = [
     name: "Menu Sehat",
     label: "Menu Sehat",
     icon: Utensils,
-    href: "/menu-sehat",
+    href: "/menu",
   },
   { name: "Artikel", label: "Artikel", icon: NotebookText, href: "/artikel" },
   { name: "Pengguna", label: "Pengguna", icon: Users, href: "/pengguna" },
