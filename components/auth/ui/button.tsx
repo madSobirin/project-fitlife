@@ -1,27 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { useFormStatus } from "react-dom";
 
 type TypeButton = {
   titleButton: string;
-  disabled?: boolean;
+  isLoading?: boolean;
 };
 
-function SubmitButton({ titleButton, disabled }: TypeButton) {
-  const { pending } = useFormStatus();
-
+function SubmitButton({ titleButton, isLoading }: TypeButton) {
   return (
     <Button
       type="submit"
-      disabled={pending || disabled}
+      disabled={isLoading}
       className="w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 py-[26px] font-semibold text-white hover:bg-emerald-600 active:scale-[0.97] transition shadow-sm"
     >
-      {pending ? (
+      {isLoading ? (
         <Loader2 className="animate-spin h-5 w-5" />
       ) : (
-        <>{titleButton} →</>
+        <>
+          {titleButton} <span className="ml-1">→</span>
+        </>
       )}
     </Button>
   );
 }
+
 export default SubmitButton;

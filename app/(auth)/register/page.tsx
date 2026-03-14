@@ -191,7 +191,7 @@ export default function RegisterPage() {
         <motion.div variants={item}>
           <SubmitButton
             titleButton={isLoading ? "Processing..." : "Create account"}
-            disabled={isLoading}
+            isLoading={isLoading}
           />
         </motion.div>
 

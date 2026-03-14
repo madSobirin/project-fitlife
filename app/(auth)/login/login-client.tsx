@@ -64,7 +64,7 @@ export default function LoginClient({ registered }: { registered?: string }) {
         }
       } else {
         toast.success("Login Berhasil! Selamat datang kembali.");
-        router.push("/dashboard");
+        router.push("/");
         router.refresh();
       }
     } catch {
@@ -173,7 +173,7 @@ export default function LoginClient({ registered }: { registered?: string }) {
         <motion.div variants={item}>
           <SubmitButton
             titleButton={isLoading ? "Authenticating..." : "Continue account"}
-            disabled={isLoading}
+            isLoading={isLoading}
           />
         </motion.div>
 
