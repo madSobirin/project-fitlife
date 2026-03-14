@@ -1,9 +1,16 @@
+enum TargetStatus {
+  Kurus
+  Normal
+  Berlebih
+  Obesitas
+}
+
 model Menu {
   id            Int @id @default(autoincrement())
   nama_menu     String
   deskripsi     String @db.Text
   kalori        Int
-  target_status String
+  target_status TargetStatus
   waktu_memasak Int
   dibaca        Int? @default(0)
   gambar        String
