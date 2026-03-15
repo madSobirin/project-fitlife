@@ -9,7 +9,7 @@ CREATE TABLE "accounts" (
     "email" TEXT NOT NULL,
     "google_id" TEXT,
     "role" TEXT NOT NULL DEFAULT 'user',
-    "password" TEXT NOT NULL,
+    "password" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),
     "is_active" BOOLEAN NOT NULL DEFAULT true,
