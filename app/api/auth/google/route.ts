@@ -6,6 +6,13 @@ export async function POST(request: Request) {
   try {
     const { token } = await request.json();
 
+    if (!token) {
+      return NextResponse.json(
+        { message: "Token Google tidak ditemukan" },
+        { status: 400 },
+      );
+    }
+
     // 1. Ambil data user langsung dari Google API menggunakan access_token
     const googleRes = await fetch(
       "https://www.googleapis.com/oauth2/v3/userinfo",
@@ -14,11 +21,18 @@ export async function POST(request: Request) {
       },
     );
 
+    if (!googleRes.ok) {
+      return NextResponse.json(
+        { message: "Token Google tidak valid" },
+        { status: 401 },
+      );
+    }
+
     const payload = await googleRes.json();
 
-    if (!payload.email) {
+    if (!payload || !payload.email) {
       return NextResponse.json(
-        { message: "Gagal mendapatkan data email dari Google" },
+        { message: "Data user Google tidak valid" },
         { status: 400 },
       );
     }
@@ -26,7 +40,16 @@ export async function POST(request: Request) {
     const { email, name, picture, sub: googleId } = payload;
 
     // 2. Cari atau Buat User di database tunggal kamu
-    let user = await prisma.account.findUnique({ where: { email } });
+    let user = await prisma.account.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        google_id: true,
+      },
+    });
 
     if (!user) {
       user = await prisma.account.create({
@@ -35,7 +58,7 @@ export async function POST(request: Request) {
           name,
           google_avatar: picture,
           google_id: googleId,
-          password: "",
+          password: null,
           is_active: true,
         },
       });
@@ -56,7 +79,11 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    cookieStore.set("role", user.role, { path: "/" });
+    cookieStore.set("role", user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
 
     return NextResponse.json({ message: "Login Berhasil", role: user.role });
   } catch (error) {

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { LoginFormSchema } from "@/lib/definition";
 import bcrypt from "bcryptjs";
-import { SignJWT } from "jose";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
@@ -21,8 +21,17 @@ export async function POST(request: Request) {
     const { email, password } = validatedFields.data;
 
     // 2. Cari user di database
-    const user = await prisma.account.findUnique({ where: { email } });
-    if (!user) {
+    const user = await prisma.account.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true,
+        role: true,
+      },
+    });
+    if (!user || !user.password) {
       return NextResponse.json(
         { message: "Email atau password salah." },
         { status: 401 },
@@ -38,34 +47,35 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!process.env.JWT_SECRET) {
-      console.error("JWT_SECRET is not defined");
-      return NextResponse.json(
-        { message: "Internal Server Error" },
-        { status: 500 },
-      );
-    }
+    const cookieStore = await cookies();
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-    const token = await new SignJWT({
-      userId: user.id,
-      email: user.email,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("2h")
-      .sign(secret);
+    cookieStore.set("userId", user.id.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+
+    cookieStore.set("role", user.role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
 
     return NextResponse.json(
       {
         message: "Login berhasil",
-        token: token,
-        user: { id: user.id, name: user.name, email: user.email },
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
       },
       { status: 200 },
     );
-  } catch (error: unknown) {
-    console.error("Error during login:", error);
+  } catch (error) {
+    console.error("LOGIN_ERROR:", error);
+
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

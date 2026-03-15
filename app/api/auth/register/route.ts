@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     if (existingAccount) {
       return NextResponse.json(
         { message: "Email sudah terdaftar." },
-        { status: 400 },
+        { status: 409 },
       );
     }
 
