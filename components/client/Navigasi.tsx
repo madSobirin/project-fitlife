@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, LogIn, Sun, Moon, X } from "lucide-react";
+import { Menu, Sun, Moon, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -104,41 +104,34 @@ export default function Navbar() {
         {mobileOpen && (
           <div className="md:hidden pb-6 border-t border-card-border pt-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
             <Link
-              href="#"
+              href="/"
               className="block text-text-light hover:text-primary font-medium transition-colors py-2"
               onClick={() => setMobileOpen(false)}
             >
               Home
             </Link>
             <Link
-              href="#"
+              href="/kalkulator-bmi"
               className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
               onClick={() => setMobileOpen(false)}
             >
               Kalkulator BMI
             </Link>
             <Link
-              href="#"
+              href="/menu-sehat"
               className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
               onClick={() => setMobileOpen(false)}
             >
               Menu Sehat
             </Link>
             <Link
-              href="#"
+              href="/artikel"
               className="block text-text-muted hover:text-primary font-medium transition-colors py-2"
               onClick={() => setMobileOpen(false)}
             >
               Artikel
             </Link>
-            <Link
-              href="/login"
-              className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold transition flex items-center gap-2 w-fit mt-2"
-              onClick={() => setMobileOpen(false)}
-            >
-              <LogIn size={18} />
-              <span>Login</span>
-            </Link>
+            <NavProfile />
           </div>
         )}
       </div>

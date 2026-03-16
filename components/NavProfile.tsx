@@ -22,7 +22,6 @@ export default function NavProfile() {
   const [loggingOut, setLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fetch user data on mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -39,11 +38,9 @@ export default function NavProfile() {
         setLoading(false);
       }
     };
-
     fetchUser();
   }, []);
 
-  // Tutup dropdown kalau klik di luar
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -65,7 +62,7 @@ export default function NavProfile() {
         setUser(null);
         setOpen(false);
         router.push("/");
-        router.refresh(); // Penting: refresh server components
+        router.refresh();
       }
     } catch (err) {
       console.error("Logout error:", err);
@@ -74,17 +71,22 @@ export default function NavProfile() {
     }
   };
 
-  // Loading state — hindari layout shift
   if (loading) {
-    return <div className="w-10 h-10 rounded-full bg-white/10 animate-pulse" />;
+    return (
+      <>
+        {/* Desktop skeleton */}
+        <div className="hidden md:block w-9 h-9 rounded-full bg-card-dark border border-card-border animate-pulse" />
+        {/* Mobile skeleton */}
+        <div className="md:hidden w-full h-14 rounded-2xl bg-card-dark border border-card-border animate-pulse mt-2" />
+      </>
+    );
   }
 
-  // Belum login — tampilkan tombol Login
   if (!user) {
     return (
       <Link
         href="/login"
-        className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(0,255,127,0.3)] transition transform hover:-translate-y-0.5 flex items-center gap-2"
+        className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(0,255,127,0.3)] transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 w-full md:w-auto"
       >
         <LogIn size={18} />
         <span>Login</span>
@@ -92,7 +94,6 @@ export default function NavProfile() {
     );
   }
 
-  // Sudah login — tampilkan avatar + dropdown
   const initials = user.name
     ? user.name
         .split(" ")
@@ -102,94 +103,169 @@ export default function NavProfile() {
         .slice(0, 2)
     : "U";
 
+  const AvatarImage = ({ size }: { size: number }) => (
+    <div
+      style={{ width: size, height: size }}
+      className="rounded-full overflow-hidden border-2 border-primary/40 flex items-center justify-center bg-primary/10 text-primary font-bold text-sm select-none shrink-0"
+    >
+      {user.google_avatar ? (
+        <Image
+          src={user.google_avatar}
+          alt={user.name}
+          width={size}
+          height={size}
+          className="object-cover w-full h-full"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <span style={{ fontSize: size * 0.35 }}>{initials}</span>
+      )}
+    </div>
+  );
+
   return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Trigger button */}
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 group"
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        {/* Avatar */}
-        <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-primary/50 group-hover:border-primary transition-colors flex items-center justify-center bg-primary/20 text-primary font-bold text-sm select-none">
-          {user.google_avatar ? (
-            <Image
-              src={user.google_avatar}
-              alt={user.name}
-              width={36}
-              height={36}
-              className="object-cover w-full h-full"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <span>{initials}</span>
+    <>
+      {/* ── DESKTOP: dropdown biasa ── */}
+      <div className="relative hidden md:block" ref={dropdownRef}>
+        <button
+          onClick={() => setOpen((prev) => !prev)}
+          className="flex items-center gap-2 group"
+          aria-expanded={open}
+          aria-haspopup="true"
+        >
+          <AvatarImage size={36} />
+          <span className="text-sm font-semibold text-text-light max-w-[100px] truncate">
+            {user.name?.split(" ")[0]}
+          </span>
+          <ChevronDown
+            size={14}
+            className={`text-text-muted transition-transform duration-200 ${open ? "rotate-180 text-primary" : ""}`}
+          />
+        </button>
+
+        {open && (
+          <div className="absolute right-0 mt-3 w-58 rounded-2xl border border-card-border bg-card-dark shadow-[0_8px_32px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,255,127,0.05)] z-50 overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-primary/30 to-transparent" />
+
+            <div className="px-4 py-3.5 border-b border-card-border bg-background-base/40">
+              <div className="flex items-center gap-3">
+                <AvatarImage size={32} />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-light truncate leading-tight">
+                    {user.name}
+                  </p>
+                  <p className="text-xs text-text-muted truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+              {user.role === "admin" && (
+                <span className="mt-2 inline-flex items-center gap-1 text-xs text-primary font-semibold bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                  <ShieldCheck size={11} /> Admin
+                </span>
+              )}
+            </div>
+
+            <div className="py-1.5">
+              <Link
+                href="/profile"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-text-light hover:bg-background-base/60 transition-colors group/item"
+              >
+                <User
+                  size={15}
+                  className="text-primary/60 group-hover/item:text-primary transition-colors"
+                />
+                <span>Profil Saya</span>
+              </Link>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-text-light hover:bg-background-base/60 transition-colors group/item"
+                >
+                  <ShieldCheck
+                    size={15}
+                    className="text-primary/60 group-hover/item:text-primary transition-colors"
+                  />
+                  <span>Admin Dashboard</span>
+                </Link>
+              )}
+            </div>
+
+            <div className="border-t border-card-border py-1.5">
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-text-muted hover:text-red-400 hover:bg-red-500/5 transition-colors disabled:opacity-40 group/logout"
+              >
+                <LogOut
+                  size={15}
+                  className="group-hover/logout:text-red-400 transition-colors"
+                />
+                <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── MOBILE: inline card, tidak pakai dropdown ── */}
+      <div className="md:hidden mt-2 border-t border-card-border pt-4">
+        {/* Profile info card */}
+        <div className="flex items-center gap-3 px-1 py-2 mb-3">
+          <AvatarImage size={44} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-text-light truncate">
+              {user.name}
+            </p>
+            <p className="text-xs text-text-muted truncate">{user.email}</p>
+          </div>
+          {user.role === "admin" && (
+            <span className="shrink-0 inline-flex items-center gap-1 text-xs text-primary font-semibold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+              <ShieldCheck size={10} /> Admin
+            </span>
           )}
         </div>
 
-        {/* Nama singkat + chevron */}
-        <span className="hidden sm:block text-sm font-semibold text-white max-w-[100px] truncate">
-          {user.name?.split(" ")[0]}
-        </span>
-        <ChevronDown
-          size={14}
-          className={`text-white/60 transition-transform duration-200 cursor-pointer ${open ? "rotate-180" : ""}`}
-        />
-      </button>
+        {/* Mobile action buttons */}
+        <div className="space-y-1">
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-text-muted hover:text-text-light hover:bg-card-dark transition-colors group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+              <User size={15} className="text-primary" />
+            </div>
+            <span className="font-medium">Profil Saya</span>
+          </Link>
 
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-[#0f1117]/95 backdrop-blur-md shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Header profile */}
-          <div className="px-4 py-3 border-b border-white/10">
-            <p className="text-sm font-semibold text-white truncate">
-              {user.name}
-            </p>
-            <p className="text-xs text-white/50 truncate">{user.email}</p>
-            {user.role === "admin" && (
-              <span className="mt-1 inline-flex items-center gap-1 text-xs text-primary font-medium">
-                <ShieldCheck size={12} />
-                Admin
-              </span>
-            )}
-          </div>
-
-          {/* Menu items */}
-          <div className="py-1">
+          {user.role === "admin" && (
             <Link
-              href="/profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
+              href="/admin/dashboard"
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-text-muted hover:text-text-light hover:bg-card-dark transition-colors group"
             >
-              <User size={15} />
-              <span>Profil Saya</span>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                <ShieldCheck size={15} className="text-primary" />
+              </div>
+              <span className="font-medium">Admin Dashboard</span>
             </Link>
+          )}
 
-            {user.role === "admin" && (
-              <Link
-                href="/admin/dashboard"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/5 transition-colors"
-              >
-                <ShieldCheck size={15} />
-                <span>Admin Dashboard</span>
-              </Link>
-            )}
-          </div>
-
-          {/* Logout */}
-          <div className="border-t border-white/10 py-1">
-            <button
-              onClick={handleLogout}
-              disabled={loggingOut}
-              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-            >
-              <LogOut size={15} />
-              <span>{loggingOut ? "Keluar..." : "Keluar"}</span>
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-text-muted hover:text-red-400 hover:bg-red-500/5 transition-colors disabled:opacity-40 group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0 group-hover:bg-red-500/15 transition-colors">
+              <LogOut size={15} className="text-red-400" />
+            </div>
+            <span className="font-medium">
+              {loggingOut ? "Keluar..." : "Keluar"}
+            </span>
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
