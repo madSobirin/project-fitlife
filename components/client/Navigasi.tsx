@@ -6,6 +6,7 @@ import { Menu, LogIn, Sun, Moon, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import NavProfile from "../NavProfile";
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
@@ -73,14 +74,7 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Login Button with icon on the side */}
-            <Link
-              href="/login"
-              className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold shadow-[0_0_15px_rgba(0,255,127,0.3)] transition transform hover:-translate-y-0.5 flex items-center gap-2"
-            >
-              <LogIn size={18} />
-              <span>Login</span>
-            </Link>
+            <NavProfile />
           </div>
 
           {/* Mobile: Theme Toggle + Menu Button */}
@@ -138,7 +132,7 @@ export default function Navbar() {
               Artikel
             </Link>
             <Link
-              href="#"
+              href="/login"
               className="bg-primary hover:bg-primary-hover text-background-dark px-6 py-2.5 rounded-full font-bold transition flex items-center gap-2 w-fit mt-2"
               onClick={() => setMobileOpen(false)}
             >
