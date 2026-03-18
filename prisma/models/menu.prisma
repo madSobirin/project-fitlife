@@ -8,6 +8,7 @@ enum TargetStatus {
 model Menu {
   id            Int @id @default(autoincrement())
   nama_menu     String
+  slug          String @unique
   deskripsi     String @db.Text
   kalori        Int
   target_status TargetStatus
