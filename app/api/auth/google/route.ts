@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { SignJWT } from "jose";
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function POST(request: Request) {
   try {
@@ -13,12 +16,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Ambil data user langsung dari Google API menggunakan access_token
     const googleRes = await fetch(
       "https://www.googleapis.com/oauth2/v3/userinfo",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
+      { headers: { Authorization: `Bearer ${token}` } },
     );
 
     if (!googleRes.ok) {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
     const { email, name, picture, sub: googleId } = payload;
 
-    // 2. Cari atau Buat User di database tunggal kamu
+    // Cari atau buat user
     let user = await prisma.account.findUnique({
       where: { email },
       select: {
@@ -62,30 +62,55 @@ export async function POST(request: Request) {
           is_active: true,
         },
       });
-    } else {
-      if (!user.google_id) {
-        user = await prisma.account.update({
-          where: { id: user.id },
-          data: { google_id: googleId, google_avatar: picture },
-        });
-      }
+    } else if (!user.google_id) {
+      user = await prisma.account.update({
+        where: { id: user.id },
+        data: { google_id: googleId, google_avatar: picture },
+      });
     }
 
+    // Update last_login_at
+    await prisma.account.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date() },
+    });
+
+    // ── Buat JWT ──
+    const jwtToken = await new SignJWT({
+      userId: user.id,
+      role: user.role,
+      email: user.email,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(secret);
+
+    // ── Simpan ke cookie ──
     const cookieStore = await cookies();
-    cookieStore.set("userId", user.id.toString(), {
+    cookieStore.set("token", jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    cookieStore.set("role", user.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
+    // Hapus cookie lama kalau masih ada
+    cookieStore.delete("userId");
+    cookieStore.delete("role");
 
-    return NextResponse.json({ message: "Login Berhasil", role: user.role });
+    return NextResponse.json({
+      message: "Login Berhasil",
+      token: jwtToken, // ← untuk mobile
+      role: user.role,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
   } catch (error) {
     console.error("GOOGLE_LOGIN_ERROR:", error);
     return NextResponse.json(
