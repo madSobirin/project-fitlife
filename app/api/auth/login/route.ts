@@ -3,14 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { LoginFormSchema } from "@/lib/definition";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { SignJWT } from "jose";
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    // 1. Validasi field
     const validatedFields = LoginFormSchema.safeParse(body);
-
     if (!validatedFields.success) {
       return NextResponse.json(
         { errors: validatedFields.error.flatten().fieldErrors },
@@ -20,7 +21,6 @@ export async function POST(request: Request) {
 
     const { email, password } = validatedFields.data;
 
-    // 2. Cari user di database
     const user = await prisma.account.findUnique({
       where: { email },
       select: {
@@ -31,6 +31,7 @@ export async function POST(request: Request) {
         role: true,
       },
     });
+
     if (!user || !user.password) {
       return NextResponse.json(
         { message: "Email atau password salah." },
@@ -38,7 +39,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. Cek Password
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return NextResponse.json(
@@ -47,35 +47,49 @@ export async function POST(request: Request) {
       );
     }
 
-    const cookieStore = await cookies();
+    // ── Buat JWT ──
+    const token = await new SignJWT({
+      userId: user.id,
+      role: user.role,
+      email: user.email,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(secret);
 
-    cookieStore.set("userId", user.id.toString(), {
+    // ── Simpan ke cookie (untuk web/browser) ──
+    const cookieStore = await cookies();
+    cookieStore.set("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    cookieStore.set("role", user.role, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
+    // Update last_login_at
+    await prisma.account.update({
+      where: { id: user.id },
+      data: { last_login_at: new Date() },
     });
 
+    // ── Return token juga untuk mobile ──
     return NextResponse.json(
       {
         message: "Login berhasil",
+        token,
         user: {
           id: user.id,
           name: user.name,
           email: user.email,
+          role: user.role,
         },
       },
       { status: 200 },
     );
   } catch (error) {
     console.error("LOGIN_ERROR:", error);
-
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
 
-export function proxy(request: NextRequest) {
+const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const role = request.cookies.get("role")?.value;
-  const userId = request.cookies.get("userId")?.value;
 
+  // CORS preflight
   if (request.method === "OPTIONS") {
     return new NextResponse(null, {
       status: 200,
@@ -16,6 +18,21 @@ export function proxy(request: NextRequest) {
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     });
+  }
+
+  // Baca role dari JWT token
+  let role: string | undefined;
+  let userId: string | undefined;
+
+  const tokenCookie = request.cookies.get("token")?.value;
+  if (tokenCookie) {
+    try {
+      const { payload } = await jwtVerify(tokenCookie, secret);
+      role = payload.role as string;
+      userId = String(payload.userId);
+    } catch {
+      // Token invalid/expired — biarkan lanjut, akan 401 di API
+    }
   }
 
   // Protect admin routes
@@ -32,12 +49,14 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // Admin otomatis redirect ke dashboard
   if (pathname === "/" && role === "admin") {
     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
   }
 
   const response = NextResponse.next();
 
+  // CORS untuk semua API
   if (pathname.startsWith("/api")) {
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set(

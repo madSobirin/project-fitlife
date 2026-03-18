@@ -1,0 +1,313 @@
+================================================================================
+  LAPORAN AUDIT API PROJECT FITLIFE
+  Kompatibilitas dengan Flutter/Dart (External API Consumer)
+  Tanggal: 18 Maret 2026
+================================================================================
+
+RINGKASAN EKSEKUTIF
+--------------------
+Project FitLife adalah aplikasi web berbasis Next.js 16 (App Router) dengan 16
+endpoint REST API yang siap menerima request HTTP dari luar — termasuk dari
+aplikasi Flutter/Dart. NAMUN terdapat BEBERAPA HAMBATAN KRITIS yang harus
+diperbaiki sebelum Flutter bisa menggunakannya secara penuh.
+
+
+================================================================================
+BAGIAN 1: DAFTAR SEMUA ENDPOINT API
+================================================================================
+
+BASE URL (lokal): http://localhost:3000
+BASE URL (produksi): https://[domain-anda].vercel.app
+
++----------+------------------------------------------+--------+---------------------+
+| No | Method | Endpoint                            | Auth?  | Deskripsi           |
++----+--------+-------------------------------------+--------+---------------------+
+| 1  | POST   | /api/auth/register                  | Tidak  | Daftar akun baru    |
+| 2  | POST   | /api/auth/login                     | Tidak  | Login user          |
+| 3  | POST   | /api/auth/logout                    | Cookie | Logout user         |
+| 4  | GET    | /api/auth/me                        | Cookie | Cek user aktif      |
+| 5  | POST   | /api/auth/google                    | Token  | Login Google OAuth  |
+| 6  | GET    | /api/menus                          | Tidak  | Ambil semua menu    |
+| 7  | GET    | /api/menus?target=Normal            | Tidak  | Filter menu target  |
+| 8  | GET    | /api/menus?id=1                     | Tidak  | Ambil menu by ID    |
+| 9  | POST   | /api/menus                          | Tidak* | Tambah menu baru    |
+| 10 | GET    | /api/menus/[id]                     | Tidak  | Detail menu         |
+| 11 | PATCH  | /api/menus/[id]                     | Tidak* | Update menu         |
+| 12 | DELETE | /api/menus/[id]                     | Tidak* | Hapus menu          |
+| 13 | GET    | /api/artikels                       | Tidak  | Ambil semua artikel |
+| 14 | GET    | /api/artikels?kategori=X            | Tidak  | Filter artikel      |
+| 15 | GET    | /api/artikels?slug=X                | Tidak  | Artikel by slug     |
+| 16 | POST   | /api/artikels                       | Tidak* | Tambah artikel      |
+| 17 | GET    | /api/accounts                       | Tidak* | List semua akun     |
+| 18 | GET    | /api/accounts?role=user             | Tidak* | Filter akun by role |
+| 19 | GET    | /api/profile                        | Cookie | Profil user login   |
+| 20 | PATCH  | /api/profile                        | Cookie | Update profil user  |
+| 21 | POST   | /api/profile/upload                 | Cookie | Upload foto profil  |
+| 22 | PATCH  | /api/profile/password               | Cookie | Ganti password      |
+| 23 | POST   | /api/upload/menu                    | Cookie | Upload gambar menu  |
+| 24 | GET    | /api/admin/dashboard                | Tidak* | Data dashboard      |
++----+--------+-------------------------------------+--------+---------------------+
+* = Belum ada proteksi (idealnya harus dilindungi role admin)
+
+
+================================================================================
+BAGIAN 2: FORMAT REQUEST & RESPONSE
+================================================================================
+
+--- POST /api/auth/register ---
+Request Body (JSON):
+  {
+    "name": "string",
+    "email": "string",
+    "password": "string"
+  }
+Response Sukses (201):
+  { "message": "Registrasi berhasil", "userId": 1 }
+Response Gagal (409):
+  { "message": "Email sudah terdaftar." }
+
+--- POST /api/auth/login ---
+Request Body (JSON):
+  {
+    "email": "string",
+    "password": "string"
+  }
+Response Sukses (200):
+  {
+    "message": "Login berhasil",
+    "user": { "id": 1, "name": "...", "email": "..." }
+  }
+  !! SERVER JUGA SET COOKIE: userId dan role (httpOnly) !!
+
+--- GET /api/menus (contoh query) ---
+GET /api/menus?target=Kurus
+GET /api/menus?target=Normal
+GET /api/menus?target=Berlebih
+GET /api/menus?target=Obesitas
+Response (200): Array of menu objects
+
+--- POST /api/menus ---
+Request Body (JSON):
+  {
+    "nama_menu": "string",
+    "deskripsi": "string",
+    "target_status": "Kurus" | "Normal" | "Berlebih" | "Obesitas",
+    "kalori": number,
+    "gambar_url": "string (opsional)"
+  }
+
+--- POST /api/upload/menu (multipart/form-data) ---
+Form Field: file (image/jpeg|png|webp, max 3MB)
+Form Field: folder (opsional, default: "fitlife/menus")
+Response (200): { "url": "https://res.cloudinary.com/..." }
+
+
+================================================================================
+BAGIAN 3: ANALISIS KOMPATIBILITAS FLUTTER/DART
+================================================================================
+
+KONDISI SAAT INI
+-----------------
+[OK]  Format response: JSON — Flutter bisa langsung parse dengan dart:convert
+[OK]  Endpoint tersedia lewat HTTP standar — bisa pakai package http atau dio
+[OK]  GET endpoints (menus, artikels) bebas CORS karena tidak ada header khusus
+[OK]  Validasi menggunakan Zod — error response terstruktur dan mudah di-handle
+
+[!!] MASALAH KRITIS: Autentikasi berbasis Cookie httpOnly
+[!!] MASALAH KRITIS: Tidak ada CORS header untuk external origin
+[!!] MASALAH: Tidak ada JWT / Bearer Token untuk mobile client
+[!!] MASALAH: Tidak ada middleware.ts (proteksi route berjalan di client-side)
+
+
+DETAIL MASALAH:
+================
+
+1. COOKIE-BASED AUTH (MASALAH UTAMA UNTUK FLUTTER)
+   --------------------------------------------------
+   Saat ini setelah login, server set cookie:
+     - userId (httpOnly, path=/)
+     - role   (httpOnly, path=/)
+
+   Cookie httpOnly tidak bisa diakses JavaScript, apalagi Dart.
+   Flutter menggunakan package http/dio yang bisa menyimpan cookie,
+   TETAPI cookie httpOnly dari server harus dikirim balik setiap request.
+   
+   Ini BISA berfungsi jika menggunakan CookieJar di Dart (package dio + dio_cookie_manager),
+   NAMUN pendekatan ini rentan dan tidak idiomatis untuk mobile apps.
+
+   REKOMENDASI: Tambahkan mekanisme JWT Bearer Token di response login,
+   sehingga Flutter bisa menyimpan token di SharedPreferences dan mengirimnya
+   di header Authorization: Bearer <token> setiap request.
+
+2. TIDAK ADA CORS HEADER
+   -----------------------
+   Next.js secara default TIDAK set CORS headers untuk external origins.
+   Flutter yang berjalan di emulator (http://10.0.2.2:3000) atau device
+   fisik akan di-BLOCK oleh browser CORS policy jika request dilakukan
+   dari WebView, NAMUN dari Flutter native HTTP client (http/dio),
+   CORS tidak berlaku karena ini bukan browser.
+
+   KESIMPULAN: Flutter native HTTP client TIDAK terblokir CORS.
+   (CORS hanya berlaku untuk browser/WebView, bukan native HTTP)
+
+3. TIDAK ADA MIDDLEWARE / PROTEKSI SERVER-SIDE
+   ----------------------------------------------
+   Tidak ada file middleware.ts. Beberapa endpoint sensitif
+   (admin/dashboard, accounts, menus POST/PATCH/DELETE)
+   tidak dicek apakah user adalah admin.
+   Siapapun bisa POST ke /api/menus tanpa login.
+
+4. GOOGLE OAUTH TIDAK KOMPATIBEL LANGSUNG DENGAN FLUTTER
+   --------------------------------------------------------
+   Endpoint /api/auth/google menerima Google ID Token.
+   Flutter punya package google_sign_in yang bisa generate ID Token,
+   sehingga alur ini BISA dipakai — dengan mengirimkan token dari Flutter
+   ke endpoint /api/auth/google.
+
+
+================================================================================
+BAGIAN 4: KESIMPULAN BISA/TIDAK BISA
+================================================================================
+
++------------------------------------------+-------------+------------------+
+| Fitur / Endpoint                         | Bisa Pakai? | Catatan          |
++------------------------------------------+-------------+------------------+
+| GET /api/menus (baca menu)               | BISA        | Langsung jalan   |
+| GET /api/artikels (baca artikel)         | BISA        | Langsung jalan   |
+| POST /api/auth/register (daftar)         | BISA        | Langsung jalan   |
+| POST /api/auth/login (login)             | BISA*       | *Perlu CookieJar |
+| GET /api/auth/me (cek user)              | BISA*       | *Perlu CookieJar |
+| GET /api/profile (profil user)           | BISA*       | *Perlu CookieJar |
+| PATCH /api/profile (update profil)       | BISA*       | *Perlu CookieJar |
+| POST /api/upload/menu (upload gambar)    | BISA*       | *Perlu CookieJar |
+| POST /api/auth/logout (logout)           | BISA*       | *Perlu CookieJar |
+| POST /api/auth/google (Google login)     | BISA**      | **Pakai g_sign_in|
+| POST /api/menus (tambah menu/admin)      | BISA        | Tidak ada proteksi|
+| GET /api/admin/dashboard                 | BISA        | Tidak ada proteksi|
++------------------------------------------+-------------+------------------+
+
+
+================================================================================
+BAGIAN 5: LANGKAH YANG HARUS DILAKUKAN AGAR FLUTTER BISA FULL INTEGRASI
+================================================================================
+
+PRIORITAS TINGGI (Wajib):
+--------------------------
+1. Tambah JWT Response di Login
+   - Modifikasi /api/auth/login untuk juga return token JWT
+   - Gunakan library 'jose' (sudah ada di package.json) untuk generate JWT
+   - Format: { "message": "Login berhasil", "token": "eyJ...", "user": {...} }
+
+2. Buat Auth Middleware via Header Authorization
+   - Buat utility verifyToken(request) yang cek header "Authorization: Bearer <token>"
+   - Gunakan ini di semua endpoint yang butuh auth (me, profile, upload)
+   - Pertahankan cookie untuk web, tambah token untuk mobile
+
+3. Tambah CORS Header (untuk WebView Flutter)
+   Jika Flutter pakai WebView, tambahkan di next.config.ts:
+   headers: [{ source: "/api/:path*", headers: [
+     { key: "Access-Control-Allow-Origin", value: "*" },
+     { key: "Access-Control-Allow-Methods", value: "GET,POST,PATCH,DELETE,OPTIONS" },
+     { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" }
+   ]}]
+
+PRIORITAS SEDANG (Direkomendasikan):
+--------------------------------------
+4. Proteksi Route Admin
+   - Buat middleware.ts untuk verifikasi role sebelum akses admin/dashboard, dll.
+   
+5. Rate Limiting
+   - Tambahkan rate limiting di endpoint login/register untuk mencegah brute force
+
+PRIORITAS RENDAH (Opsional):
+------------------------------
+6. API Documentation
+   - Buat dokumentasi Swagger/OpenAPI agar Flutter developer mudah integrasi
+
+7. Pagination
+   - Tambahkan limit & offset/cursor di GET endpoints (menus, artikels)
+   - Berguna untuk Flutter yang perlu lazy loading/infinite scroll
+
+
+================================================================================
+BAGIAN 6: CONTOH KODE FLUTTER (Cara Pakai API Saat Ini)
+================================================================================
+
+// Contoh: GET Menus (langsung bisa, tanpa auth)
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+Future<void> fetchMenus() async {
+  final response = await http.get(
+    Uri.parse('http://localhost:3000/api/menus?target=Normal'),
+  );
+  if (response.statusCode == 200) {
+    final menus = jsonDecode(response.body);
+    print(menus);
+  }
+}
+
+// Contoh: Login + Simpan Cookie (menggunakan dio + cookie_manager)
+// pubspec.yaml depedencies:
+//   dio: ^5.0.0
+//   dio_cookie_manager: ^3.0.0
+//   cookie_jar: ^4.0.0
+
+import 'package:dio/dio.dart';
+import 'package:dio_cookie_manager/dio_cookie_manager.dart';
+import 'package:cookie_jar/cookie_jar.dart';
+
+final dio = Dio();
+final cookieJar = CookieJar();
+dio.interceptors.add(CookieManager(cookieJar));
+
+Future<void> login(String email, String password) async {
+  final response = await dio.post(
+    'http://localhost:3000/api/auth/login',
+    data: {'email': email, 'password': password},
+  );
+  // Cookie otomatis tersimpan di cookieJar
+  // Gunakan dio yang sama untuk request berikutnya
+}
+
+
+================================================================================
+BAGIAN 7: TECH STACK PROJECT
+================================================================================
+
+Framework  : Next.js 16.1.6 (App Router)
+Runtime    : Node.js
+Database   : PostgreSQL (Neon.tech - cloud hosted)
+ORM        : Prisma 7.4.2
+Auth       : Cookie httpOnly + Google OAuth (google-auth-library)
+Upload     : Cloudinary
+Validasi   : Zod 4.3.6
+JWT Lib    : jose 6.2.1 (sudah ada, belum dipakai untuk token response)
+Deploy     : Dapat di-deploy ke Vercel (sudah ada next.config.ts)
+
+
+================================================================================
+KESIMPULAN AKHIR
+================================================================================
+
+Project FitLife BISA menerima request dari Flutter/Dart DENGAN CATATAN:
+
+1. Endpoint publik (GET menus, GET artikels, POST register, POST login)
+   -> LANGSUNG BISA diakses dari Flutter tanpa modifikasi apapun.
+
+2. Endpoint yang butuh auth (profile, upload, me, logout)
+   -> Bisa diakses JIKA Flutter menggunakan CookieJar (dio + cookie_manager)
+   -> LEBIH BAIK jika dimodifikasi untuk mendukung JWT Bearer Token.
+
+3. Tidak ada CORS blocker untuk native Flutter HTTP client
+   -> Flutter native tidak terblokir CORS (berbeda dengan browser/WebView).
+
+4. Modifikasi login response untuk mengembalikan JWT token
+   -> Ini langkah PALING PENTING agar integrasi Flutter lebih clean dan standar.
+
+Tingkat Kesiapan Saat Ini: 60% siap untuk Flutter
+Tingkat Kesiapan Setelah Perbaikan JWT: 95% siap untuk Flutter
+
+================================================================================
+END OF REPORT
+================================================================================

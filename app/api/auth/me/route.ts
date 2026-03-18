@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("userId")?.value;
-
-    if (!userId) {
-      return NextResponse.json(
-        { message: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+    const auth = await getAuthUser(request);
+    if (!auth) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.account.findUnique({
-      where: { id: parseInt(userId) },
+      where: { id: auth.userId },
       select: {
         id: true,
         name: true,
