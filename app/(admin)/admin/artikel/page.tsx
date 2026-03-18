@@ -45,8 +45,8 @@ export default function ArtikelPage() {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   // Debounce search
@@ -84,12 +84,14 @@ export default function ArtikelPage() {
     fetchArtikels();
   }, [fetchArtikels]);
 
-  const handleDelete = async (id: number) => {
-    setDeletingId(id);
+  const handleDelete = async (slug: string) => {
+    setDeletingId(slug);
     try {
-      const res = await fetch(`/api/artikels/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/artikels/${slug}`, {
+        method: "DELETE",
+      });
       if (res.ok) {
-        setArtikels((prev) => prev.filter((a) => a.id !== id));
+        setArtikels((prev) => prev.filter((a) => a.slug !== slug));
         setDeleteConfirm(null);
         setDeleteSuccess(true);
         setTimeout(() => setDeleteSuccess(false), 2500);
@@ -293,7 +295,7 @@ export default function ArtikelPage() {
             <div className="grid grid-cols-1 gap-4 md:hidden mb-6">
               {paginated.map((item, i) => (
                 <div
-                  key={item.id}
+                  key={item.slug}
                   className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3"
                 >
                   <div className="flex gap-4">
@@ -341,19 +343,19 @@ export default function ArtikelPage() {
                   </p>
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-50">
                     <Link
-                      href={`/admin/artikel/${item.id}/edit`}
+                      href={`/admin/artikel/${item.slug}/edit`}
                       className="flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
                     </Link>
-                    {deleteConfirm === item.id ? (
+                    {deleteConfirm === item.slug ? (
                       <div className="flex gap-1">
                         <button
-                          onClick={() => handleDelete(item.id)}
-                          disabled={deletingId === item.id}
+                          onClick={() => handleDelete(item.slug)}
+                          disabled={deletingId === item.slug}
                           className="flex-1 flex items-center justify-center py-2 bg-red-500 text-white rounded-lg text-xs font-semibold"
                         >
-                          {deletingId === item.id ? (
+                          {deletingId === item.slug ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
                             "Yakin?"
@@ -368,7 +370,7 @@ export default function ArtikelPage() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => setDeleteConfirm(item.id)}
+                        onClick={() => setDeleteConfirm(item.slug)}
                         className="flex items-center justify-center py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Hapus
@@ -406,7 +408,7 @@ export default function ArtikelPage() {
                   <tbody className="divide-y divide-gray-50">
                     {paginated.map((item, i) => (
                       <tr
-                        key={item.id}
+                        key={item.slug}
                         className="hover:bg-gray-50/50 transition-colors"
                       >
                         <td className="px-6 py-5 text-sm text-gray-400 font-mono">
@@ -456,19 +458,19 @@ export default function ArtikelPage() {
                         <td className="px-6 py-5 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Link
-                              href={`/admin/artikel/${item.id}/edit`}
+                              href={`/admin/artikel/${item.slug}/edit`}
                               className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
                             >
                               <Pencil className="h-4 w-4" />
                             </Link>
-                            {deleteConfirm === item.id ? (
+                            {deleteConfirm === item.slug ? (
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => handleDelete(item.id)}
-                                  disabled={deletingId === item.id}
+                                  onClick={() => handleDelete(item.slug)}
+                                  disabled={deletingId === item.slug}
                                   className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 disabled:opacity-50"
                                 >
-                                  {deletingId === item.id ? (
+                                  {deletingId === item.slug ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                   ) : (
                                     "Yakin?"
@@ -483,7 +485,7 @@ export default function ArtikelPage() {
                               </div>
                             ) : (
                               <button
-                                onClick={() => setDeleteConfirm(item.id)}
+                                onClick={() => setDeleteConfirm(item.slug)}
                                 className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                               >
                                 <Trash2 className="h-4 w-4" />

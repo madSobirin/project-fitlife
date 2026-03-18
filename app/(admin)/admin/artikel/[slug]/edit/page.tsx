@@ -32,7 +32,7 @@ type FormErrors = Partial<Record<keyof FormData, string[]>>;
 export default function EditArtikelPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
+  const slug = params?.slug as string;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -57,7 +57,7 @@ export default function EditArtikelPage() {
 
   const fetchArtikel = useCallback(async () => {
     try {
-      const res = await fetch(`/api/artikels/${id}`);
+      const res = await fetch(`/api/artikels/${slug}`);
       if (res.status === 404) {
         setNotFound(true);
         return;
@@ -79,7 +79,7 @@ export default function EditArtikelPage() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     fetchArtikel();
@@ -137,7 +137,7 @@ export default function EditArtikelPage() {
     setErrors({});
     setSaving(true);
     try {
-      const res = await fetch(`/api/artikels/${id}`, {
+      const res = await fetch(`/api/artikels/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
