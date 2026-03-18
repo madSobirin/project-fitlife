@@ -5,32 +5,31 @@ import { MenuSchema } from "@/lib/definition";
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const { slug } = await params;
 
-    if (isNaN(id)) {
-      return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
-    }
-
-    const menu = await prisma.menu.update({
-      where: { id },
-      data: { dibaca: { increment: 1 } },
+    const menu = await prisma.menu.findUnique({
+      where: { slug },
     });
 
-    return NextResponse.json(menu);
-  } catch (error: unknown) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
+    if (!menu) {
       return NextResponse.json(
         { message: "Menu tidak ditemukan" },
         { status: 404 },
       );
     }
+
+    // Increment dibaca
+    const updated = await prisma.menu.update({
+      where: { slug },
+      data: { dibaca: { increment: 1 } },
+    });
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("GET_MENU_ERROR:", err);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },
@@ -38,18 +37,12 @@ export async function GET(
   }
 }
 
-// 2. PUT: Update Data
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
-
-    if (isNaN(id)) {
-      return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
-    }
+    const { slug } = await params;
 
     const body = await request.json();
     const validatedFields = MenuSchema.safeParse(body);
@@ -61,9 +54,20 @@ export async function PUT(
       );
     }
 
+    // Regenerate slug kalau nama_menu berubah
+    const newSlug =
+      validatedFields.data.nama_menu
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "") + `-${Date.now()}`;
+
     const updatedMenu = await prisma.menu.update({
-      where: { id },
-      data: validatedFields.data,
+      where: { slug },
+      data: {
+        ...validatedFields.data,
+        slug: newSlug,
+      },
     });
 
     return NextResponse.json({
@@ -87,20 +91,14 @@ export async function PUT(
   }
 }
 
-// 3. DELETE: Hapus Data
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const { id: idParam } = await params;
-    const id = parseInt(idParam);
+    const { slug } = await params;
 
-    if (isNaN(id)) {
-      return NextResponse.json({ message: "ID tidak valid" }, { status: 400 });
-    }
-
-    await prisma.menu.delete({ where: { id } });
+    await prisma.menu.delete({ where: { slug } });
 
     return NextResponse.json({ message: "Menu berhasil dihapus" });
   } catch (error: unknown) {

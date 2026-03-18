@@ -55,7 +55,7 @@ type FormErrors = Partial<Record<keyof FormData, string[]>>;
 export default function EditMenuPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
+  const slug = params?.slug as string;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -81,7 +81,7 @@ export default function EditMenuPage() {
   // Fetch data menu existing
   const fetchMenu = useCallback(async () => {
     try {
-      const res = await fetch(`/api/menus/${id}`);
+      const res = await fetch(`/api/menus/${slug}`);
       if (res.status === 404) {
         setNotFound(true);
         return;
@@ -103,7 +103,7 @@ export default function EditMenuPage() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     fetchMenu();
@@ -176,7 +176,7 @@ export default function EditMenuPage() {
     setErrors({});
     setSaving(true);
     try {
-      const res = await fetch(`/api/menus/${id}`, {
+      const res = await fetch(`/api/menus/${slug}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

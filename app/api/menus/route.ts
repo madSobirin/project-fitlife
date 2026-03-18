@@ -101,8 +101,19 @@ export async function POST(request: Request) {
       );
     }
 
+    // Generate slug dari nama_menu
+    const slug =
+      validatedFields.data.nama_menu
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "") + `-${Date.now()}`;
+
     const newMenu = await prisma.menu.create({
-      data: validatedFields.data,
+      data: {
+        ...validatedFields.data,
+        slug,
+      },
     });
 
     return NextResponse.json(

@@ -25,6 +25,7 @@ type TargetStatus = "Kurus" | "Normal" | "Berlebih" | "Obesitas";
 interface Menu {
   id: number;
   nama_menu: string;
+  slug: string;
   deskripsi: string;
   kalori: number;
   target_status: TargetStatus;
@@ -76,8 +77,8 @@ export default function MenuPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Delete
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
 
   // ── Debounce search 400ms ──
@@ -117,12 +118,12 @@ export default function MenuPage() {
   }, [fetchMenus]);
 
   // ── Delete ──
-  const handleDelete = async (id: number) => {
-    setDeletingId(id);
+  const handleDelete = async (slug: string) => {
+    setDeletingId(slug);
     try {
-      const res = await fetch(`/api/menus/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/menus/${slug}`, { method: "DELETE" });
       if (res.ok) {
-        setMenus((prev) => prev.filter((m) => m.id !== id));
+        setMenus((prev) => prev.filter((m) => m.slug !== slug));
         setDeleteConfirm(null);
         setDeleteSuccess(true);
         setTimeout(() => setDeleteSuccess(false), 2500);
@@ -376,19 +377,19 @@ export default function MenuPage() {
                   </p>
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-50">
                     <Link
-                      href={`/admin/menu/${item.id}/edit`}
+                      href={`/admin/menu/${item.slug}/edit`}
                       className="flex items-center justify-center py-2 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-semibold hover:bg-indigo-100 transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit
                     </Link>
-                    {deleteConfirm === item.id ? (
+                    {deleteConfirm === item.slug ? (
                       <div className="flex gap-1">
                         <button
-                          onClick={() => handleDelete(item.id)}
-                          disabled={deletingId === item.id}
+                          onClick={() => handleDelete(item.slug)}
+                          disabled={deletingId === item.slug}
                           className="flex-1 flex items-center justify-center py-2 bg-red-500 text-white rounded-lg text-xs font-semibold"
                         >
-                          {deletingId === item.id ? (
+                          {deletingId === item.slug ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           ) : (
                             "Yakin?"
@@ -403,7 +404,7 @@ export default function MenuPage() {
                       </div>
                     ) : (
                       <button
-                        onClick={() => setDeleteConfirm(item.id)}
+                        onClick={() => setDeleteConfirm(item.slug)}
                         className="flex items-center justify-center py-2 bg-red-50 text-red-600 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Hapus
@@ -492,19 +493,19 @@ export default function MenuPage() {
                         <td className="px-6 py-5 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Link
-                              href={`/admin/menu/${item.id}/edit`}
+                              href={`/admin/menu/${item.slug}/edit`}
                               className="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
                             >
                               <Pencil className="h-4 w-4" />
                             </Link>
-                            {deleteConfirm === item.id ? (
+                            {deleteConfirm === item.slug ? (
                               <div className="flex items-center gap-1">
                                 <button
-                                  onClick={() => handleDelete(item.id)}
-                                  disabled={deletingId === item.id}
+                                  onClick={() => handleDelete(item.slug)}
+                                  disabled={deletingId === item.slug}
                                   className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
                                 >
-                                  {deletingId === item.id ? (
+                                  {deletingId === item.slug ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                   ) : (
                                     "Yakin?"
@@ -519,7 +520,7 @@ export default function MenuPage() {
                               </div>
                             ) : (
                               <button
-                                onClick={() => setDeleteConfirm(item.id)}
+                                onClick={() => setDeleteConfirm(item.slug)}
                                 className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                               >
                                 <Trash2 className="h-4 w-4" />
