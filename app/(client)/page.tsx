@@ -161,47 +161,6 @@ export default function Home() {
       </section>
 
       {/* Recent Content Section */}
-      {/* <section className="py-16 bg-background-base border-t border-card-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="bg-card-dark rounded-2xl p-6 shadow-sm border border-card-border">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-text-light flex items-center gap-2">
-                  <Utensils size={20} className="text-primary" />
-                  Menu Sehat Terbaru
-                </h3>
-                <Link
-                  href="#"
-                  className="text-primary text-sm font-semibold hover:text-text-light transition flex items-center gap-1"
-                >
-                  Lihat semua <ChevronRight size={14} />
-                </Link>
-              </div>
-              <div className="h-32 flex items-center justify-center text-text-muted italic bg-background-base/50 rounded-xl border border-dashed border-card-border">
-                Belum ada menu yang tersedia.
-              </div>
-            </div>
-
-            <div className="bg-card-dark rounded-2xl p-6 shadow-sm border border-card-border">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-text-light flex items-center gap-2">
-                  <BookOpen size={20} className="text-primary" />
-                  Artikel Terbaru
-                </h3>
-                <Link
-                  href="#"
-                  className="text-primary text-sm font-semibold hover:text-text-light transition flex items-center gap-1"
-                >
-                  Lihat semua <ChevronRight size={14} />
-                </Link>
-              </div>
-              <div className="h-32 flex items-center justify-center text-text-muted italic bg-background-base/50 rounded-xl border border-dashed border-card-border">
-                Belum ada artikel.
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> */}
       <HomeRecentContent />
 
       {/* CTA Section */}
@@ -225,7 +184,7 @@ export default function Home() {
             hidup lebih sehat bersama FitLife.id.
           </p>
           <Link
-            href="#"
+            href="kalkulator"
             className="inline-flex items-center gap-3 bg-primary text-slate-800 hover:bg-primary-hover px-10 py-4 rounded-full font-bold text-lg shadow-[0_0_25px_rgba(0,255,127,0.5)] transition transform hover:scale-105"
           >
             <Scale size={22} />

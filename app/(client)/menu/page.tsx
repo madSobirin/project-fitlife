@@ -158,7 +158,7 @@ export default function MenuSehatPage() {
           }}
         />
 
-        <div className="max-w-3xl mx-auto px-4 text-center relative z-10">
+        <div className="max-w-3xl mx-auto px-4 text-center relative z-10 mt-20">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-black tracking-widest uppercase mb-6">
             <Shield size={11} className="fill-primary" />
             FitLife Premium Menu
@@ -175,7 +175,7 @@ export default function MenuSehatPage() {
           </p>
 
           {/* Search + Filter */}
-          <div className="flex items-center gap-3 max-w-xl mx-auto">
+          <div className="flex items-center gap-3 max-w-xl mx-auto mb-30">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
               <input
