@@ -1,0 +1,360 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import {
+  Bot,
+  Send,
+  Sparkles,
+  X,
+  Leaf,
+  Scale,
+  Utensils,
+  Heart,
+} from "lucide-react";
+
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+};
+
+const QUICK_PROMPTS = [
+  { icon: <Scale size={13} />, text: "Hitung kalori harian saya" },
+  { icon: <Utensils size={13} />, text: "Menu diet untuk pemula" },
+  { icon: <Leaf size={13} />, text: "Tips hidup lebih sehat" },
+  { icon: <Heart size={13} />, text: "Olahraga untuk pemula" },
+];
+
+// Hardcode responses — nanti diganti AI
+const HARDCODE_RESPONSES: Record<string, string> = {
+  default:
+    "Halo! Saya FitBot, asisten kesehatan Anda. Saya siap membantu pertanyaan seputar diet, nutrisi, olahraga, dan gaya hidup sehat. Ada yang bisa saya bantu? 😊",
+  kalori:
+    "Kebutuhan kalori harian bergantung pada beberapa faktor:\n\n• **Berat & tinggi badan** — dasar perhitungan BMR\n• **Usia** — metabolisme melambat seiring usia\n• **Aktivitas fisik** — dari sedentary hingga very active\n\nFormula sederhana untuk estimasi:\n**Pria**: BMR = 88.36 + (13.4 × BB) + (4.8 × TB) - (5.7 × usia)\n**Wanita**: BMR = 447.6 + (9.2 × BB) + (3.1 × TB) - (4.3 × usia)\n\nKemudian kalikan dengan faktor aktivitas (1.2–1.9). Coba Kalkulator BMI kami untuk hasil yang lebih akurat! 💪",
+  menu: "Untuk pemula yang ingin diet sehat, ini rekomendasi menu harian:\n\n🌅 **Sarapan**: Oatmeal + buah + telur rebus\n☀️ **Makan siang**: Nasi merah + ayam panggang + sayur\n🌙 **Makan malam**: Sup bening + tahu/tempe + sayuran\n🍎 **Camilan**: Buah segar, yogurt, atau kacang-kacangan\n\nTips penting:\n• Hindari gorengan dan makanan ultra-proses\n• Minum 8 gelas air putih per hari\n• Jangan skip sarapan!\n\nLihat koleksi menu sehat kami di halaman Menu Sehat 🥗",
+  tips: "Berikut 7 tips hidup sehat yang terbukti efektif:\n\n1. 💧 **Hidrasi** — Minum min. 2L air per hari\n2. 🛌 **Tidur** — 7-9 jam tidur berkualitas\n3. 🏃 **Gerak** — 30 menit aktivitas fisik per hari\n4. 🥗 **Makan seimbang** — Perbanyak sayur & buah\n5. 🧘 **Kelola stres** — Meditasi atau hobi positif\n6. 🚫 **Hindari rokok & alkohol**\n7. 🩺 **Cek kesehatan rutin** — Minimal setahun sekali\n\nMulai dari yang kecil dan konsisten! Konsistensi > Intensitas 🌟",
+  olahraga:
+    "Program olahraga untuk pemula yang aman dan efektif:\n\n**Minggu 1-2** (Adaptasi):\n• Jalan cepat 20 menit × 3x/minggu\n• Peregangan ringan setiap hari\n\n**Minggu 3-4** (Progres):\n• Jalan cepat + jogging ringan 25 menit\n• Push-up, squat, plank — 2 set masing-masing\n\n**Bulan 2+** (Intensifikasi):\n• Kardio 30 menit + latihan beban 3x/minggu\n• Rest day 1-2x/minggu sangat penting!\n\nIngat: **pemanasan 5 menit** sebelum & **pendinginan 5 menit** setelah latihan wajib dilakukan! 💪",
+};
+
+function getResponse(input: string): string {
+  const lower = input.toLowerCase();
+  if (
+    lower.includes("kalori") ||
+    lower.includes("hitung") ||
+    lower.includes("bmr")
+  )
+    return HARDCODE_RESPONSES.kalori;
+  if (
+    lower.includes("menu") ||
+    lower.includes("diet") ||
+    lower.includes("makan") ||
+    lower.includes("resep")
+  )
+    return HARDCODE_RESPONSES.menu;
+  if (
+    lower.includes("tips") ||
+    lower.includes("sehat") ||
+    lower.includes("hidup")
+  )
+    return HARDCODE_RESPONSES.tips;
+  if (
+    lower.includes("olahraga") ||
+    lower.includes("gym") ||
+    lower.includes("latihan") ||
+    lower.includes("gerak")
+  )
+    return HARDCODE_RESPONSES.olahraga;
+  return "Pertanyaan menarik! Saya FitBot siap membantu seputar kesehatan, nutrisi, dan gaya hidup sehat. Bisa Anda perjelas pertanyaannya? Atau coba tanyakan tentang:\n\n• Kebutuhan kalori harian\n• Rekomendasi menu diet\n• Tips hidup sehat\n• Program olahraga pemula 😊";
+}
+
+// Render markdown sederhana
+function renderContent(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, i) => {
+    if (line.startsWith("**") && line.endsWith("**")) {
+      return (
+        <p key={i} className="font-bold text-text-light">
+          {line.slice(2, -2)}
+        </p>
+      );
+    }
+    // Bold inline
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <p key={i} className={line === "" ? "h-2" : ""}>
+        {parts.map((part, j) =>
+          part.startsWith("**") && part.endsWith("**") ? (
+            <strong key={j} className="text-primary font-bold">
+              {part.slice(2, -2)}
+            </strong>
+          ) : (
+            part
+          ),
+        )}
+      </p>
+    );
+  });
+}
+
+export default function ChatPanel({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: HARDCODE_RESPONSES.default,
+      timestamp: new Date(),
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typing]);
+
+  const sendMessage = async (text?: string) => {
+    const content = text ?? input.trim();
+    if (!content || typing) return;
+
+    const userMsg: Message = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setTyping(true);
+
+    // Simulate typing delay
+    await new Promise((r) => setTimeout(r, 800 + Math.random() * 800));
+
+    const response = getResponse(content);
+    const botMsg: Message = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: response,
+      timestamp: new Date(),
+    };
+
+    setTyping(false);
+    setMessages((prev) => [...prev, botMsg]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const formatTime = (d: Date) =>
+    d.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <>
+      {/* Backdrop mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-background-dark/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Panel */}
+      <div
+        className={`fixed z-40 transition-all duration-300 ease-out
+          bottom-24 right-6
+          w-[calc(100vw-3rem)] max-w-[400px]
+          md:bottom-24 md:right-6 md:w-[400px]
+          ${
+            open
+              ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+              : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+          }`}
+      >
+        <div className="bg-background-dark border border-card-border rounded-3xl shadow-2xl shadow-black/50 overflow-hidden flex flex-col h-[580px] max-h-[80vh]">
+          {/* ── Header ── */}
+          <div className="relative px-5 py-4 border-b border-card-border bg-card-dark/80 shrink-0">
+            {/* Glow line */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent" />
+
+            <div className="flex items-center gap-3">
+              {/* Bot avatar */}
+              <div className="relative">
+                <div className="w-10 h-10 rounded-2xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                  <Bot size={20} className="text-primary" />
+                </div>
+                {/* Online dot */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-primary rounded-full border-2 border-background-dark shadow-[0_0_6px_rgba(0,255,127,0.6)]" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-black text-text-light">FitBot</p>
+                  <span className="flex items-center gap-1 text-[10px] text-primary font-bold bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+                    <Sparkles size={9} className="fill-primary" /> AI Health
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted">
+                  {typing ? (
+                    <span className="text-primary animate-pulse">
+                      Sedang mengetik...
+                    </span>
+                  ) : (
+                    "Asisten kesehatan & nutrisi Anda"
+                  )}
+                </p>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-xl text-text-muted hover:text-text-light hover:bg-background-base/50 transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* ── Messages ── */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 scrollbar-thin">
+            {messages.map((msg, idx) => (
+              <div
+                key={msg.id}
+                className={`flex gap-2.5 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                style={{
+                  animation: "fadeSlideIn 0.3s ease forwards",
+                  animationDelay: `${idx === messages.length - 1 ? 0 : 0}ms`,
+                }}
+              >
+                {/* Avatar */}
+                {msg.role === "assistant" && (
+                  <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-1">
+                    <Bot size={14} className="text-primary" />
+                  </div>
+                )}
+
+                <div
+                  className={`flex flex-col gap-1 max-w-[80%] ${msg.role === "user" ? "items-end" : "items-start"}`}
+                >
+                  <div
+                    className={`px-4 py-3 rounded-2xl text-xs leading-relaxed ${
+                      msg.role === "user"
+                        ? "bg-primary text-background-dark font-semibold rounded-tr-sm"
+                        : "bg-card-dark border border-card-border text-text-muted rounded-tl-sm"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <div className="space-y-0.5">
+                        {renderContent(msg.content)}
+                      </div>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
+                  <span className="text-[10px] text-text-muted/50 px-1">
+                    {formatTime(msg.timestamp)}
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Typing indicator */}
+            {typing && (
+              <div className="flex gap-2.5 items-end">
+                <div className="w-7 h-7 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Bot size={14} className="text-primary" />
+                </div>
+                <div className="bg-card-dark border border-card-border px-4 py-3 rounded-2xl rounded-tl-sm">
+                  <div className="flex items-center gap-1">
+                    {[0, 1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-bounce"
+                        style={{ animationDelay: `${i * 150}ms` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* ── Quick Prompts ── */}
+          {messages.length <= 1 && !typing && (
+            <div className="px-4 pb-2 flex gap-2 flex-wrap shrink-0">
+              {QUICK_PROMPTS.map((q) => (
+                <button
+                  key={q.text}
+                  onClick={() => sendMessage(q.text)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card-dark border border-card-border text-text-muted text-[11px] font-semibold hover:border-primary/40 hover:text-primary transition-all"
+                >
+                  <span className="text-primary">{q.icon}</span>
+                  {q.text}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* ── Input ── */}
+          <div className="px-4 pb-4 pt-2 shrink-0 border-t border-card-border">
+            <div className="flex items-center gap-2 bg-card-dark border border-card-border rounded-2xl px-4 py-2.5 focus-within:border-primary/40 focus-within:shadow-[0_0_0_3px_rgba(0,255,127,0.06)] transition-all">
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Tanya seputar kesehatan..."
+                disabled={typing}
+                className="flex-1 bg-transparent text-text-light text-xs placeholder:text-text-muted/50 focus:outline-none disabled:opacity-50"
+              />
+              <button
+                onClick={() => sendMessage()}
+                disabled={!input.trim() || typing}
+                className="w-8 h-8 rounded-xl bg-primary text-background-dark flex items-center justify-center hover:bg-primary-hover transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_10px_rgba(0,255,127,0.2)] hover:shadow-[0_0_14px_rgba(0,255,127,0.4)] shrink-0"
+              >
+                <Send size={14} />
+              </button>
+            </div>
+            <p className="text-[10px] text-text-muted/40 text-center mt-2">
+              FitBot dapat membuat kesalahan. Konsultasikan dokter untuk
+              diagnosis.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </>
+  );
+}
