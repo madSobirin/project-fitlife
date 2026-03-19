@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ArtikelSchema } from "@/lib/definition";
 import { Prisma } from "@/generated/prisma/client";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(request: Request) {
   try {
@@ -79,6 +80,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const auth = await getAuthUser(request);
+    if (!auth)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (auth.role !== "admin")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
     const body = await request.json();
     const validated = ArtikelSchema.safeParse(body);
 

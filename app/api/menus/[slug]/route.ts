@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { MenuSchema } from "@/lib/definition";
+import { getAuthUser } from "@/lib/auth";
 
 export async function GET(
   request: Request,
@@ -42,6 +43,12 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
+    const auth = await getAuthUser(request);
+    if (!auth)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (auth.role !== "admin")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
     const { slug } = await params;
 
     const body = await request.json();
@@ -96,6 +103,12 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
+    const auth = await getAuthUser(request);
+    if (!auth)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (auth.role !== "admin")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
     const { slug } = await params;
 
     await prisma.menu.delete({ where: { slug } });

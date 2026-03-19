@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { MenuSchema } from "@/lib/definition";
 import { TargetStatus } from "@/generated/prisma/client";
+import { getAuthUser } from "@/lib/auth";
 
 const VALID_TARGET_STATUS = ["Kurus", "Normal", "Berlebih", "Obesitas"];
 
@@ -91,6 +92,15 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    // ── Auth check — hanya admin ──
+    const auth = await getAuthUser(request);
+    if (!auth) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    if (auth.role !== "admin") {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
 
     const validatedFields = MenuSchema.safeParse(body);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ArtikelSchema } from "@/lib/definition";
 import { Prisma } from "@/generated/prisma/client";
+import { getAuthUser } from "@/lib/auth";
 
 // GET by slug — auto increment dibaca
 export async function GET(
@@ -52,6 +53,12 @@ export async function PUT(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
+    const auth = await getAuthUser(request);
+    if (!auth)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (auth.role !== "admin")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
     const { slug } = await params;
 
     const body = await request.json();
@@ -93,6 +100,12 @@ export async function DELETE(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
+    const auth = await getAuthUser(request);
+    if (!auth)
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    if (auth.role !== "admin")
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+
     const { slug } = await params;
 
     await prisma.artikel.delete({ where: { slug } });
