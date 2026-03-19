@@ -39,14 +39,14 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-start">
                 <Link
-                  href="#"
+                  href="/kalkulator"
                   className="bg-primary text-slate-800 hover:bg-primary-hover px-8 py-3.5 rounded-full font-bold shadow-[0_0_20px_rgba(0,255,127,0.4)] transition transform hover:-translate-y-1 text-center flex items-center justify-center gap-2"
                 >
                   Mulai Sekarang
                   <ArrowRight size={18} />
                 </Link>
                 <Link
-                  href="#"
+                  href="/"
                   className="bg-transparent border border-card-border hover:border-primary text-text-light hover:text-primary px-8 py-3.5 rounded-full font-bold transition text-center"
                 >
                   Pelajari Lebih Lanjut
