@@ -7,30 +7,59 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
 
 export async function POST(request: Request) {
   try {
-    const { token } = await request.json();
+    const body = await request.json();
 
-    if (!token) {
+    // Support access_token (web) dan id_token (Flutter)
+    const accessToken = body.token;
+    const idToken = body.id_token;
+
+    let payload: { email: string; name: string; picture: string; sub: string };
+
+    if (accessToken) {
+      // Web flow — verify via Google userinfo
+      const googleRes = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      );
+      if (!googleRes.ok) {
+        return NextResponse.json(
+          { message: "Token Google tidak valid" },
+          { status: 401 },
+        );
+      }
+      payload = await googleRes.json();
+    } else if (idToken) {
+      // Flutter flow — verify id_token via tokeninfo
+      const verifyRes = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`,
+      );
+      if (!verifyRes.ok) {
+        return NextResponse.json(
+          { message: "ID Token tidak valid" },
+          { status: 401 },
+        );
+      }
+      const tokenData = await verifyRes.json();
+      if (tokenData.error) {
+        return NextResponse.json(
+          { message: "ID Token tidak valid" },
+          { status: 401 },
+        );
+      }
+      payload = {
+        email: tokenData.email,
+        name: tokenData.name,
+        picture: tokenData.picture,
+        sub: tokenData.sub,
+      };
+    } else {
       return NextResponse.json(
-        { message: "Token Google tidak ditemukan" },
+        { message: "Token tidak ditemukan" },
         { status: 400 },
       );
     }
 
-    const googleRes = await fetch(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-
-    if (!googleRes.ok) {
-      return NextResponse.json(
-        { message: "Token Google tidak valid" },
-        { status: 401 },
-      );
-    }
-
-    const payload = await googleRes.json();
-
-    if (!payload || !payload.email) {
+    if (!payload?.email) {
       return NextResponse.json(
         { message: "Data user Google tidak valid" },
         { status: 400 },
@@ -69,13 +98,12 @@ export async function POST(request: Request) {
       });
     }
 
-    // Update last_login_at
     await prisma.account.update({
       where: { id: user.id },
       data: { last_login_at: new Date() },
     });
 
-    // ── Buat JWT ──
+    // Buat JWT
     const jwtToken = await new SignJWT({
       userId: user.id,
       role: user.role,
@@ -86,7 +114,7 @@ export async function POST(request: Request) {
       .setExpirationTime("7d")
       .sign(secret);
 
-    // ── Simpan ke cookie ──
+    // Set cookie untuk web
     const cookieStore = await cookies();
     cookieStore.set("token", jwtToken, {
       httpOnly: true,
@@ -96,13 +124,12 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 * 7,
     });
 
-    // Hapus cookie lama kalau masih ada
     cookieStore.delete("userId");
     cookieStore.delete("role");
 
     return NextResponse.json({
       message: "Login Berhasil",
-      token: jwtToken, // ← untuk mobile
+      token: jwtToken,
       role: user.role,
       user: {
         id: user.id,
