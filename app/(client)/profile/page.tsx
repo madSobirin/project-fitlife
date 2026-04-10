@@ -375,7 +375,7 @@ export default function ProfilePage() {
     : null;
 
   const currentAvatar =
-    uploadPreview || profile?.google_avatar || profile?.photo;
+    uploadPreview || profile?.photo || profile?.google_avatar;
   // Apakah user punya password (bukan pure Google login)
   const hasPassword =
     profile?.password !== null && profile?.password !== undefined;

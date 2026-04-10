@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -11,10 +11,12 @@ cloudinary.config({
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get("userId")?.value;
-    if (!userId)
+    const auth = await getAuthUser(request);
+    if (!auth) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    // const userId = auth.userId;
 
     const formData = await request.formData();
     const file = formData.get("photo") as File | null;
@@ -45,7 +47,7 @@ export async function POST(request: Request) {
     // Upload ke Cloudinary
     const result = await cloudinary.uploader.upload(base64, {
       folder: "fitlife/avatars",
-      public_id: `avatar_${userId}`, // overwrite foto lama otomatis
+      public_id: `avatar_${auth.userId}`, // overwrite foto lama otomatis
       overwrite: true,
       transformation: [
         { width: 400, height: 400, crop: "fill", gravity: "face" }, // crop fokus ke wajah
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
     });
 
     const updated = await prisma.account.update({
-      where: { id: parseInt(userId) },
+      where: { id: auth.userId },
       data: { photo: result.secure_url, updated_at: new Date() },
       select: {
         id: true,
