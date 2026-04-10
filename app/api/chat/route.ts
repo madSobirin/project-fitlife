@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }));
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
       "Maaf, saya tidak dapat menjawab saat ini.";
 
     return NextResponse.json({ response: botResponse });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Chat API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
