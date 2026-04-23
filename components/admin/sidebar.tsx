@@ -6,6 +6,7 @@ import {
   Home,
   Utensils,
   NotebookText,
+  MapPin,
   Users,
   LogOut,
   X,
@@ -35,6 +36,12 @@ const sidebarItems: SidebarItem[] = [
     label: "Artikel",
     icon: NotebookText,
     href: "/admin/artikel",
+  },
+  {
+    name: "Lokasi",
+    label: "Lokasi Olahraga",
+    icon: MapPin,
+    href: "/admin/lokasi",
   },
   { name: "Pengguna", label: "Pengguna", icon: Users, href: "/admin/pengguna" },
 ];
