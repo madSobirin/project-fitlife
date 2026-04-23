@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -21,57 +21,36 @@ type Props = {
   onSelectLocation: (loc: Lokasi) => void;
 };
 
-// Custom marker icons
-const createIcon = (color: string, size: number = 28) =>
-  L.divIcon({
-    className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size],
-    popupAnchor: [0, -size],
-    html: `<div style="
-      width: ${size}px;
-      height: ${size}px;
-      background: ${color};
-      border: 3px solid white;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    ">
-      <div style="
-        transform: rotate(45deg);
-        font-size: ${size * 0.35}px;
-        color: white;
-        font-weight: 900;
-      ">●</div>
-    </div>`,
-  });
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-const greenIcon = createIcon("#00ff7f", 28);
-const selectedIcon = createIcon("#00cc66", 36);
-
-const userIcon = L.divIcon({
-  className: "",
-  iconSize: [20, 20],
-  iconAnchor: [10, 10],
-  html: `<div style="
-    width: 20px;
-    height: 20px;
-    background: #3b82f6;
-    border: 3px solid white;
-    border-radius: 50%;
-    box-shadow: 0 0 0 6px rgba(59,130,246,0.2), 0 2px 8px rgba(0,0,0,0.3);
-    animation: pulse 2s ease-in-out infinite;
-  "></div>
-  <style>
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 0 6px rgba(59,130,246,0.2), 0 2px 8px rgba(0,0,0,0.3); }
-      50% { box-shadow: 0 0 0 12px rgba(59,130,246,0.1), 0 2px 8px rgba(0,0,0,0.3); }
-    }
-  </style>`,
-});
+function buildPopup(loc: Lokasi, userPos: [number, number] | null): string {
+  let distHtml = "";
+  if (userPos && loc.latitude != null && loc.longitude != null) {
+    const d = haversine(userPos[0], userPos[1], loc.latitude, loc.longitude);
+    const str = d < 1 ? `${Math.round(d * 1000)} m` : `${d.toFixed(1)} km`;
+    distHtml = `<div style="display:inline-block;background:#dcfce7;padding:2px 8px;border-radius:6px;font-size:11px;color:#16a34a;font-weight:600;margin-bottom:6px;">📍 ${str} dari Anda</div><br/>`;
+  }
+  const gmapsUrl =
+    loc.latitude != null && loc.longitude != null
+      ? `https://www.google.com/maps/dir/?api=1&destination=${loc.latitude},${loc.longitude}`
+      : "";
+  return `<div style="font-family:system-ui,sans-serif;min-width:160px;">
+    <div style="font-size:14px;font-weight:700;color:#111;margin-bottom:2px;">${loc.name}</div>
+    ${loc.address ? `<div style="font-size:11px;color:#666;margin-bottom:6px;">${loc.address}</div>` : ""}
+    ${distHtml}
+    ${gmapsUrl ? `<a href="${gmapsUrl}" target="_blank" rel="noopener" style="display:inline-block;background:#22c55e;color:white;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;">🗺️ Buka Google Maps</a>` : ""}
+  </div>`;
+}
 
 export default function LokasiMap({
   locations,
@@ -79,158 +58,127 @@ export default function LokasiMap({
   selectedLocation,
   onSelectLocation,
 }: Props) {
-  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const markersRef = useRef<Map<number, L.Marker>>(new Map());
-  const userMarkerRef = useRef<L.Marker | null>(null);
+  const markersRef = useRef<L.CircleMarker[]>([]);
+  const userMarkerRef = useRef<L.CircleMarker | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
-  // Initialize map
+  // Init map once
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!containerRef.current || mapRef.current) return;
 
-    const center: [number, number] = userPosition || [-6.2, 106.816];
-
-    const map = L.map(mapContainerRef.current, {
-      center,
-      zoom: 13,
+    const map = L.map(containerRef.current, {
+      center: userPosition || [-6.7, 108.55],
+      zoom: 14,
       zoomControl: false,
-      attributionControl: false,
     });
 
-    // Dark tile layer matching FitLife dark theme
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 19,
-      },
-    ).addTo(map);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
 
-    // Zoom control di kanan bawah
     L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    // Attribution
-    L.control
-      .attribution({ position: "bottomleft" })
-      .addAttribution(
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-      )
-      .addTo(map);
-
     mapRef.current = map;
+    setMapReady(true);
 
     return () => {
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update user position marker
+  // User position
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !userPosition) return;
+    if (!mapReady || !mapRef.current || !userPosition) return;
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng(userPosition);
     } else {
-      userMarkerRef.current = L.marker(userPosition, { icon: userIcon })
-        .addTo(map)
-        .bindPopup(
-          `<div style="
-            font-family: system-ui, sans-serif;
-            padding: 4px 0;
-          ">
-            <strong style="color: #3b82f6;">📍 Lokasi Anda</strong>
-          </div>`,
-        );
+      userMarkerRef.current = L.circleMarker(userPosition, {
+        radius: 8,
+        fillColor: "#3b82f6",
+        color: "#ffffff",
+        weight: 3,
+        fillOpacity: 1,
+      })
+        .addTo(mapRef.current)
+        .bindPopup("<strong style='color:#3b82f6;'>📍 Lokasi Anda</strong>");
     }
-  }, [userPosition]);
+  }, [userPosition, mapReady]);
 
-  // Update location markers
+  // Sync location markers — clear all & re-add every time
   useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
-    if (!map) return;
 
-    const currentIds = new Set(locations.map((l) => l.id));
+    // Remove ALL old location markers
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
 
-    // Remove markers no longer in locations
-    markersRef.current.forEach((marker, id) => {
-      if (!currentIds.has(id)) {
-        marker.remove();
-        markersRef.current.delete(id);
-      }
-    });
-
-    // Add/update markers
-    const bounds: [number, number][] = [];
+    const bounds: L.LatLng[] = [];
 
     locations.forEach((loc) => {
-      if (!loc.latitude || !loc.longitude) return;
+      if (loc.latitude == null || loc.longitude == null) return;
 
-      const pos: [number, number] = [loc.latitude, loc.longitude];
-      bounds.push(pos);
+      const latlng = L.latLng(loc.latitude, loc.longitude);
+      bounds.push(latlng);
 
-      const isSelected = selectedLocation?.id === loc.id;
-      const icon = isSelected ? selectedIcon : greenIcon;
+      const isSel = selectedLocation?.id === loc.id;
 
-      const existingMarker = markersRef.current.get(loc.id);
-      if (existingMarker) {
-        existingMarker.setLatLng(pos);
-        existingMarker.setIcon(icon);
-      } else {
-        const marker = L.marker(pos, { icon })
-          .addTo(map)
-          .bindPopup(
-            `<div style="
-              font-family: system-ui, sans-serif;
-              padding: 4px 0;
-              min-width: 150px;
-            ">
-              <strong style="color: #00ff7f; font-size: 13px;">${loc.name}</strong>
-              ${loc.address ? `<br><span style="color: #8aafa1; font-size: 11px;">${loc.address}</span>` : ""}
-            </div>`,
-          );
+      const circle = L.circleMarker(latlng, {
+        radius: isSel ? 14 : 10,
+        fillColor: isSel ? "#22c55e" : "#ef4444",
+        color: "#ffffff",
+        weight: isSel ? 4 : 3,
+        fillOpacity: 1,
+      })
+        .addTo(map)
+        .bindPopup(buildPopup(loc, userPosition), { maxWidth: 280 });
 
-        marker.on("click", () => {
-          onSelectLocation(loc);
-        });
+      circle.on("click", () => onSelectLocation(loc));
 
-        markersRef.current.set(loc.id, marker);
-      }
+      markersRef.current.push(circle);
     });
 
-    // Fit bounds if we have locations
+    // Fit bounds
     if (bounds.length > 0) {
-      if (userPosition) bounds.push(userPosition);
-      const leafletBounds = L.latLngBounds(
-        bounds.map(([lat, lng]) => [lat, lng] as [number, number]),
-      );
-      map.fitBounds(leafletBounds, { padding: [50, 50], maxZoom: 14 });
+      if (userPosition) bounds.push(L.latLng(userPosition[0], userPosition[1]));
+      map.fitBounds(L.latLngBounds(bounds), {
+        padding: [60, 60],
+        maxZoom: 15,
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locations, selectedLocation]);
+  }, [locations, selectedLocation, userPosition, mapReady, onSelectLocation]);
 
-  // Fly to selected location
+  // Fly to selected
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !selectedLocation?.latitude || !selectedLocation?.longitude)
-      return;
+    if (!mapReady || !mapRef.current) return;
+    if (!selectedLocation || selectedLocation.latitude == null || selectedLocation.longitude == null) return;
 
-    map.flyTo([selectedLocation.latitude, selectedLocation.longitude], 16, {
-      duration: 0.8,
-    });
+    mapRef.current.flyTo(
+      [selectedLocation.latitude, selectedLocation.longitude],
+      16,
+      { duration: 0.8 },
+    );
 
-    const marker = markersRef.current.get(selectedLocation.id);
-    if (marker) {
-      marker.openPopup();
+    // Find and open the popup for the selected marker
+    const idx = locations.findIndex((l) => l.id === selectedLocation.id);
+    if (idx !== -1 && markersRef.current[idx]) {
+      setTimeout(() => markersRef.current[idx]?.openPopup(), 900);
     }
-  }, [selectedLocation]);
+  }, [selectedLocation, mapReady, locations]);
 
   return (
     <div
-      ref={mapContainerRef}
+      ref={containerRef}
       className="w-full h-full"
-      style={{ background: "#062c1e" }}
+      style={{ background: "#f0f4f0" }}
     />
   );
 }

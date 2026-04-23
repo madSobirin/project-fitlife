@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+
 import {
   Search,
   MapPin,
@@ -8,7 +9,6 @@ import {
   Loader2,
   X,
   ChevronDown,
-  Locate,
   Map as MapIcon,
   List,
 } from "lucide-react";
@@ -44,6 +44,7 @@ export default function LokasiOlahragaPage() {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null,
   );
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
 
   // Debounce search
@@ -268,7 +269,7 @@ export default function LokasiOlahragaPage() {
               <>
                 {/* Map View */}
                 {viewMode === "map" && (
-                  <div className="mb-8">
+                  <div className="mb-8" ref={mapSectionRef}>
                     <div className="bg-card-dark border border-card-border rounded-3xl overflow-hidden shadow-2xl">
                       <div className="h-[450px] md:h-[550px]">
                         <MapView
@@ -301,7 +302,9 @@ export default function LokasiOlahragaPage() {
                         onClick={() => {
                           setSelectedLocation(loc);
                           if (viewMode === "list") setViewMode("map");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
+                          setTimeout(() => {
+                            mapSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                          }, 100);
                         }}
                         className={`group text-left bg-card-dark border rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_32px_rgba(0,255,127,0.06)] ${selectedLocation?.id === loc.id
                           ? "border-primary/50 shadow-[0_0_24px_rgba(0,255,127,0.1)]"
